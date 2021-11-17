@@ -1,0 +1,39 @@
+PODS:
+  - AppWheel (2.0.0.4)
+  - appwheel_flutter (0.0.1):
+    - AppWheel (= 2.0.0.4)
+    - Flutter
+    - YYModel (= 1.0.4)
+  - device_info (0.0.1):
+    - Flutter
+  - Flutter (1.0.0)
+  - YYModel (1.0.4)
+
+DEPENDENCIES:
+  - appwheel_flutter (from `.symlinks/plugins/appwheel_flutter/ios`)
+  - device_info (from `.symlinks/plugins/device_info/ios`)
+  - Flutter (from `Flutter`)
+
+SPEC REPOS:
+  trunk:
+    - AppWheel
+    - YYModel
+
+EXTERNAL SOURCES:
+  appwheel_flutter:
+    :path: ".symlinks/plugins/appwheel_flutter/ios"
+  device_info:
+    :path: ".symlinks/plugins/device_info/ios"
+  Flutter:
+    :path: Flutter
+
+SPEC CHECKSUMS:
+  AppWheel: 9cd5cd91d868049703fffac312bec02cd1f3569f
+  appwheel_flutter: 4263cf1114e79457d0e8fa7c6b8a57aa1cc5fd68
+  device_info: d7d233b645a32c40dfdc212de5cf646ca482f175
+  Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
+  YYModel: 2a7fdd96aaa4b86a824e26d0c517de8928c04b30
+
+PODFILE CHECKSUM: a5ead389ae8478b2f010fbadad4f103eae9ff09f
+
+COCOAPODS: 1.10.2
