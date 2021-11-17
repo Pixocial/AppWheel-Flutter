@@ -1,16 +1,25 @@
 import 'dart:io';
 
-import 'package:aw_purchase/model/aw_product.dart';
-import 'package:aw_purchase/util/aw_common_util.dart';
-import 'package:aw_purchase_example/product_detail.dart';
+import 'package:appwheel_flutter/aw_purchase.dart';
+import 'package:appwheel_flutter/model/aw_product.dart';
+import 'package:appwheel_flutter/aw_platform_type.dart';
+import 'package:appwheel_flutter/util/aw_common_util.dart';
+import 'package:appwheel_flutter_example/product_detail.dart';
 import 'package:flutter/material.dart';
-import 'package:aw_purchase/aw_purchase.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:oktoast/oktoast.dart';
 
-class ProductListScreen extends StatelessWidget {
+class ProductListScreen extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return new ProductListState();
+  }
+}
+
+class ProductListState extends State<ProductListScreen> {
   final List<AWProduct> productList = [];
+  List<String> skuIds = [];
   late BuildContext context;
 
   @override
@@ -30,7 +39,7 @@ class ProductListScreen extends StatelessWidget {
   ListView getListView() {
     _requestProducts();
     if (Platform.isAndroid) {
-      return new ListView(
+      return ListView(
         children: [
           TextButton(
             style: TextButton.styleFrom(
@@ -126,10 +135,30 @@ class ProductListScreen extends StatelessWidget {
       );
     } else {
       ///iOS的sku
-      return new ListView(
-        children: [],
-      );
+      return createList();
     }
+  }
+
+  ListView createList() {
+    skuIds = getIosProducts();
+    return ListView.builder(
+        itemCount: skuIds.length,
+        itemExtent: 40, //item的高度
+        itemBuilder: (BuildContext context, int index) {
+          return createItem(skuIds[index]);
+        });
+  }
+
+  TextButton createItem(String productId) {
+    return TextButton(
+      style: TextButton.styleFrom(
+        textStyle: const TextStyle(fontSize: 20),
+      ),
+      onPressed: () {
+        itemClick(productId);
+      },
+      child: Text(productId),
+    );
   }
 
   List<String> getAndroidInAppProducts() {
@@ -150,37 +179,115 @@ class ProductListScreen extends StatelessWidget {
     ];
   }
 
+  List<String> getIosProducts() {
+    return [
+      "com.commsource.pomelo.subscription.1year.test",
+      "com.commsource.pomelo.subscription.1year.newuser",
+      "com.commsource.pomelo.subscription.1year.newuser.test",
+      "subscription_ye",
+      "subscription_mo",
+      "com.commsource.pomelo.subscription.1month.test",
+      "com.commsource.pomelo.filterPack",
+      "Brightness",
+      "com.commsource.pomelo.lifetime.test",
+      "Leak",
+      "Freeze",
+      "Fade",
+      "com.commsource.pomelo.timespackages"
+    ];
+  }
+
   /// 进入详情页面
   void gotoDetail() {}
 
   _requestProducts() async {
     EasyLoading.show(status: 'loading');
+
+    /// for android
     if (Platform.isAndroid) {
       var inappRes = await AwPurchase.requestProducts(
-          1, "inapp", getAndroidInAppProducts());
-      if (inappRes.result && inappRes.data != null) {
-        productList.addAll(inappRes.data as List<AWProduct>);
+          AwPlatformType.android, "inapp", getAndroidInAppProducts());
+      if ((inappRes?.result ?? false) && inappRes?.data != null) {
+        productList.addAll(inappRes?.data as List<AWProduct>);
       } else {
-        if (AWCommonUtil.strNotEmpty(inappRes.msg)) {
-          showToast(inappRes.msg as String);
+        if (AWCommonUtil.strNotEmpty(inappRes?.msg)) {
+          showToast(inappRes?.msg as String);
         }
       }
-      var subsRes =
-          await AwPurchase.requestProducts(1, "subs", getAndroidSubsProducts());
+      var subsRes = await AwPurchase.requestProducts(
+          AwPlatformType.android, "subs", getAndroidSubsProducts());
 
-      if (subsRes.result && subsRes.data != null) {
-        productList.addAll(subsRes.data as List<AWProduct>);
+      if ((subsRes?.result ?? false) && subsRes?.data != null) {
+        productList.addAll(subsRes?.data as List<AWProduct>);
       } else {
-        if (AWCommonUtil.strNotEmpty(subsRes.msg)) {
-          showToast(subsRes.msg as String);
+        if (AWCommonUtil.strNotEmpty(subsRes?.msg)) {
+          showToast(subsRes?.msg as String);
         }
       }
     }
+
+    /// for ios
+    if (Platform.isIOS) {
+      var iosRes = await AwPurchase.requestProducts(
+          AwPlatformType.ios, "", getIosProducts());
+      if ((iosRes?.result ?? false) && iosRes?.data != null) {
+        productList.addAll(iosRes?.data as List<AWProduct>);
+        // set productType,ios need user set productType for yourself
+        final subs = [
+          "com.commsource.pomelo.subscription.1year.test",
+          "com.commsource.pomelo.subscription.1year.newuser",
+          "com.commsource.pomelo.subscription.1year.newuser.test",
+          "subscription_ye",
+          "subscription_mo",
+          "com.commsource.pomelo.subscription.1month.test",
+          "com.commsource.pomelo.filterPack"
+        ];
+        final consumables = [
+          "com.commsource.pomelo.timespackages"
+        ];
+        final nonConsumables = [
+          "Brightness",
+          "com.commsource.pomelo.lifetime.test",
+          "Leak",
+          "Freeze",
+          "Fade"
+        ];
+        final nonRenewable = [
+          "com.commsource.pomelo.filterPack"
+        ];
+        productList.forEach((pro) {
+          if(consumables.contains( pro.productId)){
+            pro.productType = "0";
+          }
+        });
+        productList.forEach((pro) {
+          if(nonConsumables.contains( pro.productId)){
+            pro.productType = "1";
+          }
+        });
+        productList.forEach((pro) {
+          if(subs.contains( pro.productId)){
+            pro.productType = "2";
+          }
+        });
+        productList.forEach((pro) {
+          if(nonRenewable.contains( pro.productId)){
+            pro.productType = "3";
+          }
+        });
+      } else {
+        if (AWCommonUtil.strNotEmpty(iosRes?.msg)) {
+          showToast(iosRes?.msg as String);
+        }
+      }
+    }
+
     EasyLoading.dismiss(animation: true);
     if (productList.length <= 0) {
       showToast("request productError");
       return;
     }
+
     showToast("request success");
   }
 

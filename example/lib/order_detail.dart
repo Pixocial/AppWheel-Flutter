@@ -1,7 +1,7 @@
 import 'dart:io';
 
-import 'package:aw_purchase/aw_purchase.dart';
-import 'package:aw_purchase/model/aw_purchase_info.dart';
+import 'package:appwheel_flutter/model/aw_purchase_info.dart';
+import 'package:appwheel_flutter/aw_purchase.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';

@@ -1,9 +1,13 @@
-import 'package:aw_purchase_example/product_list.dart';
+
+import 'dart:io';
+
+import 'package:appwheel_flutter/model/aw_base_respon_model.dart';
+import 'package:appwheel_flutter_example/product_list.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:flutter/services.dart';
-import 'package:aw_purchase/aw_purchase.dart';
+import 'package:appwheel_flutter/aw_purchase.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:oktoast/oktoast.dart';
 
@@ -11,12 +15,14 @@ import 'history_order_list.dart';
 import 'order_list.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatefulWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
-  _MyAppState createState() => _MyAppState();
+  State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
@@ -25,8 +31,8 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    initPlatformState();
     _init();
+    initPlatformState();
   }
 
   // Platform messages are asynchronous, so we initialize in an async method.
@@ -55,14 +61,14 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return OKToast(
         child: MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('AW purchase Demo'),
-        ),
-        body: const MyStatelessWidget(),
-      ),
+          home: Scaffold(
+            appBar: AppBar(
+              title: const Text('AW purchase Demo'),
+            ),
+            body: const MyStatelessWidget(),
+          ),
           builder: EasyLoading.init(),
-    ));
+        ));
   }
 }
 
@@ -118,10 +124,16 @@ class MyStatelessWidget extends StatelessWidget {
 
 /// 初始化
 void _init() async {
-  var res = await AwPurchase.init("166", "hykTest");
-  if (!res.result) {
+  AWResponseModel? res;
+  if(Platform.isAndroid) {
+    res = await AwPurchase.init("166", "hykTest");
+  }
+  if (Platform.isIOS) {
+    res = await AwPurchase.init("121", "hykTest");
+  }
+  if (!(res?.result??false)) {
     showToast(
-      res.msg as String,
+      res?.msg as String,
       duration: Duration(seconds: 2),
       position: ToastPosition.bottom,
       backgroundColor: Colors.black.withOpacity(0.8),
@@ -138,4 +150,5 @@ void _init() async {
       textStyle: TextStyle(fontSize: 18.0),
     );
   }
+
 }

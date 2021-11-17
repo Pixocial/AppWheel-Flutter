@@ -9,13 +9,13 @@ class AWPurchaseInfo {
   int paymentType = 2;
 
   ///购买时间
-  late int purchaseTime;
+  String? purchaseTime;
 
   ///令牌具有唯一性，用于针对给定商品和用户对的购买进行标识。
-  late String? purchaseToken;
+  String? purchaseToken;
 
   ///订单的购买状态:The purchase state of the order. Possible values are: 0. Purchased 1. Canceled 2. Pending
-  late int purchaseState;
+  int? purchaseState;
 
   ///是否自动续费
   bool autoRenewing = false;
@@ -29,10 +29,17 @@ class AWPurchaseInfo {
   ////订阅独有的////
   ///是否处于宽限期
   bool inGracePeriod = false;
+  bool isInIntroPeriod = false;
+
+  ///商品类型，iOS使用
+  ///0：消耗型，1：非消耗型，2：订阅，3：非续期订阅
+  String? productType;
+
+  ///是否是家庭共享拥有者，iOS使用
+  String? inAppOwnershipType;
 
   ///过期时间
-  late int? expireTime;
-
+  String? expireTime;
 
   static AWPurchaseInfo fromAndroidJson(Map<String, dynamic> json) {
     final purchaseInfo = AWPurchaseInfo();
@@ -48,7 +55,22 @@ class AWPurchaseInfo {
     if (json["inGracePeriod"] != null) {
       purchaseInfo.inGracePeriod = json["inGracePeriod"];
     }
-    purchaseInfo.expireTime = json["expireTime"];
+    purchaseInfo.expireTime = json["expireTime"] ?? "";
+
+    return purchaseInfo;
+  }
+
+  static AWPurchaseInfo fromIosJson(Map<String, dynamic> json) {
+    final purchaseInfo = AWPurchaseInfo();
+    purchaseInfo.productId = json["productIdentifier"];
+    purchaseInfo.orderId = json["originalTransactionId"];
+    purchaseInfo.productType =
+        json["productType"] != null ? json["productType"].toString() : "";
+    purchaseInfo.isInIntroPeriod = json["isInIntroPeriod"] ?? false;
+    if (json["subscriptionExpiredTime"] != null) {
+      final date = DateTime.parse(json["subscriptionExpiredTime"]);
+      purchaseInfo.expireTime = "${date.microsecondsSinceEpoch}";
+    }
 
     return purchaseInfo;
   }
@@ -58,14 +80,13 @@ class AWPurchaseInfo {
     return 'AWPurchaseInfo{productId: $productId,\n '
         'orderId: $orderId, \n'
         'paymentType: $paymentType,\n '
-        'purchaseTime: $purchaseTime, \n'
-        'purchaseToken: ${purchaseToken??""},\n'
-        ' purchaseState: $purchaseState, \n'
+        'purchaseTime: ${purchaseTime ?? ""}, \n'
+        'purchaseToken: ${purchaseToken ?? ""},\n'
+        ' purchaseState: ${purchaseState ?? 2}, \n'
         'autoRenewing: $autoRenewing, \n'
-        'obfuscatedAccountId: ${obfuscatedAccountId??""},\n'
-        ' obfuscatedProfileId: ${obfuscatedProfileId??""}, \n'
+        'obfuscatedAccountId: ${obfuscatedAccountId ?? ""},\n'
+        ' obfuscatedProfileId: ${obfuscatedProfileId ?? ""}, \n'
         'inGracePeriod: $inGracePeriod,\n '
-        'expireTime: $expireTime}';
+        'expireTime: ${expireTime ?? ""}}';
   }
 }
-

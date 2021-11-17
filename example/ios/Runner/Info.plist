@@ -2,8 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_dartobservatory._tcp</string>
+	</array>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Appwheel Flutter</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -11,7 +17,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>aw_purchase_example</string>
+	<string>appwheel_flutter_example</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -40,6 +46,6 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<false/>
+	<true/>
 </dict>
 </plist>

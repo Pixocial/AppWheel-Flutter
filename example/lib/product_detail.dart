@@ -1,9 +1,11 @@
 import 'dart:io';
 
-import 'package:aw_purchase/model/aw_product.dart';
+import 'package:appwheel_flutter/aw_purchase.dart';
+import 'package:appwheel_flutter/model/aw_base_respon_model.dart';
+import 'package:appwheel_flutter/model/aw_product.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:appwheel_flutter/aw_platform_type.dart';
 import 'package:flutter/material.dart';
-import 'package:aw_purchase/aw_purchase.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:oktoast/oktoast.dart';
@@ -45,15 +47,21 @@ class ProductDetailState extends State<ProductDetailScreen> {
   purchase() async {
     EasyLoading.show(status: "loading");
     if (product != null) {
-      final response = await AwPurchase.purchase(1, product!);
+      AWResponseModel? response;
+      if (Platform.isAndroid) {
+        response = await AwPurchase.purchase(AwPlatformType.android, product!);
+      }
+      if (Platform.isIOS) {
+        response = await AwPurchase.purchase(AwPlatformType.ios, product!);
+      }
       EasyLoading.dismiss(animation: true);
-      if (response.result) {
+      if (response?.result ?? false) {
         showToast("purchase success");
         isPurchase = true;
         setState(() {});
         return;
       }
-      showToast("pruchase error:${response.msg}");
+      showToast("pruchase error:${response?.msg}");
     }
   }
 
@@ -79,8 +87,8 @@ class ProductDetailState extends State<ProductDetailScreen> {
           textStyle: const TextStyle(fontSize: 20),
         ),
         onPressed: () {
-        Navigator.push(context,
-            MaterialPageRoute(builder: (context) => OrderList()));
+          Navigator.push(
+              context, MaterialPageRoute(builder: (context) => OrderList()));
         },
         child: const Text('查看订单'),
       ),

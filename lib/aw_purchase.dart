@@ -5,17 +5,18 @@
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:ffi';
 
-import 'package:aw_purchase/model/aw_base_respon_model.dart';
-import 'package:aw_purchase/model/aw_parse_native_model.dart';
+import 'package:appwheel_flutter/aw_platform_type.dart';
+import 'package:appwheel_flutter/util/aw_common_util.dart';
 import 'package:flutter/services.dart';
-import 'package:aw_purchase/model/aw_product.dart';
 
+import 'model/aw_base_respon_model.dart';
+import 'model/aw_parse_native_model.dart';
+import 'model/aw_product.dart';
 import 'model/aw_purchase_info.dart';
 
 class AwPurchase {
-  static const MethodChannel _channel = const MethodChannel('aw_purchase');
+  static const MethodChannel _channel = MethodChannel('appwheel_flutter');
 
   static Future<String?> get platformVersion async {
     final String? version = await _channel.invokeMethod('getPlatformVersion');
@@ -35,9 +36,14 @@ class AwPurchase {
 
   /// 恢复购买
   /// platform:平台，1：Android，2：iOS
-  static Future<AWResponseModel<List<AWPurchaseInfo>>> restore(
-      int platform) async {
-    return androidRestore();
+  static Future<AWResponseModel<List<AWPurchaseInfo>>?> restore(
+      AwPlatformType type) async {
+    if (type == AwPlatformType.android) {
+      return androidRestore();
+    }
+    if (type == AwPlatformType.ios) {
+      return iosRestore();
+    }
   }
 
   static Future<AWResponseModel<List<AWPurchaseInfo>>> androidRestore() async {
@@ -46,24 +52,41 @@ class AwPurchase {
     if (!model.result) {
       return AWResponseModel.sendFailed(model.msg);
     }
-
-    final List purchaseStr = model.data;
     final List<AWPurchaseInfo> purchaseList = [];
+    if (model.data == null) {
+      return AWResponseModel.sendSuccess(purchaseList);
+    }
+    final List purchaseStr = model.data;
     purchaseStr.forEach((purchaseJson) {
       purchaseList.add(AWPurchaseInfo.fromAndroidJson(purchaseJson));
     });
     return AWResponseModel.sendSuccess(purchaseList);
   }
 
+  static Future<AWResponseModel<List<AWPurchaseInfo>>> iosRestore() async {
+    var result = await _channel.invokeMethod('restore');
+    final model = getResponseModel(result);
+    if (!model.result) {
+      return AWResponseModel.sendFailed(model.msg);
+    }
+    final List<AWPurchaseInfo> purchaseList = [];
+    if (model.data == null) {
+      return AWResponseModel.sendSuccess(purchaseList);
+    }
+    return parseIosOrder(model.data, purchaseList);
+  }
+
   /// 请求商品信息
   /// platform:平台，1：Android，2：iOS
   /// productType: 安卓使用的，inapp、subs
-  static Future<AWResponseModel<List<AWProduct>>> requestProducts(
-      int platform, String productType, List<String> products) async {
-    if (platform == 1) {
-      return requestAndroidProducts(productType, products);
+  static Future<AWResponseModel<List<AWProduct>>?> requestProducts(
+      AwPlatformType type, String productType, List<String> productIds) async {
+    if (type == AwPlatformType.android) {
+      return requestAndroidProducts(productType, productIds);
     }
-    return AWResponseModel.sendFailed("errorMsg");
+    if (type == AwPlatformType.ios) {
+      return requestIosProducts(productIds);
+    }
   }
 
   /// 请求安卓的商品信息
@@ -76,30 +99,51 @@ class AwPurchase {
       return AWResponseModel.sendFailed(model.msg);
     }
     //开始对安卓的数据进行解析
-    final List productsStr = model.data;
     final List<AWProduct> productList = [];
+    if (model.data == null) {
+      return AWResponseModel.sendSuccess(productList);
+    }
+    final List productsStr = model.data;
     productsStr.forEach((productJson) {
       productList.add(AWProduct.fromAndroidJson(productJson));
     });
     return AWResponseModel.sendSuccess(productList);
   }
 
-  //
-  // static Future<dynamic> requestIosProducts(){
-  //
-  // }
+  /// 请求ios的商品信息
+  static Future<AWResponseModel<List<AWProduct>>> requestIosProducts(
+      List<String> products) async {
+    var result =
+        await _channel.invokeMethod('requestProducts', {"products": products});
+    final model = getResponseModel(result);
+    if (!model.result) {
+      return AWResponseModel.sendFailed(model.msg);
+    }
+    //开始对ios的数据进行解析
+    final List<AWProduct> productList = [];
+    if (model.data == null) {
+      return AWResponseModel.sendSuccess(productList);
+    }
+    if (model.data["validProducts"] == null) {
+      return AWResponseModel.sendFailed("Invalid sku");
+    }
+    final List productsStr = model.data["validProducts"];
+    productsStr.forEach((productJson) {
+      productList.add(AWProduct.fromIosJson(productJson));
+    });
+    return AWResponseModel.sendSuccess(productList);
+  }
 
   /// 购买商品
   /// platform 平台，1：Android，2：iOS
-  static Future<AWResponseModel<AWPurchaseInfo>> purchase(
-      int platform, AWProduct product) async {
-    if (platform == 1) {
+  static Future<AWResponseModel<AWPurchaseInfo>?> purchase(
+      AwPlatformType type, AWProduct product) async {
+    if (type == AwPlatformType.android) {
       return purchaseAndroid(product);
     }
-    //ios
-    // if (platform == 2) {
-    return AWResponseModel.sendFailed("errorMsg");
-    // }
+    if (type == AwPlatformType.ios) {
+      return purchaseIos(product);
+    }
   }
 
   ///购买安卓的商品
@@ -116,17 +160,30 @@ class AwPurchase {
     final purchaseInfo = AWPurchaseInfo.fromAndroidJson(model.data);
     return AWResponseModel.sendSuccess(purchaseInfo);
   }
+  ///购买安卓的商品
+  static Future<AWResponseModel<AWPurchaseInfo>> purchaseIos(
+      AWProduct product) async {
+    // 需要把product解析成安卓需要的数据格式
+    final iosString = product.toIosJson();
+    var result =
+        await _channel.invokeMethod('purchase', {"product": iosString});
+    final model = getResponseModel(result);
+    if (!model.result) {
+      return AWResponseModel.sendFailed(model.msg);
+    }
+    final purchaseInfo = AWPurchaseInfo.fromIosJson(model.data);
+    return AWResponseModel.sendSuccess(purchaseInfo);
+  }
 
   ///获取有效订单列表
-  static Future<AWResponseModel<List<AWPurchaseInfo>>> getOrderList(
-      int platform) async {
-    if (platform == 1) {
+  static Future<AWResponseModel<List<AWPurchaseInfo>>?> getOrderList(
+      AwPlatformType type) async {
+    if (type == AwPlatformType.android) {
       return getAndroidOrderList();
     }
-    //ios
-    // if (platform == 2) {
-    return AWResponseModel.sendFailed("errorMsg");
-    // }
+    if (type == AwPlatformType.ios) {
+      return getIosOrderList();
+    }
   }
 
   static Future<AWResponseModel<List<AWPurchaseInfo>>>
@@ -136,19 +193,34 @@ class AwPurchase {
     if (!model.result) {
       return AWResponseModel.sendFailed(model.msg);
     }
-
-    final List purchaseStr = model.data;
     final List<AWPurchaseInfo> purchaseList = [];
+    if (model.data == null) {
+      return AWResponseModel.sendSuccess(purchaseList);
+    }
+    final List purchaseStr = model.data;
     purchaseStr.forEach((purchaseJson) {
       purchaseList.add(AWPurchaseInfo.fromAndroidJson(purchaseJson));
     });
     return AWResponseModel.sendSuccess(purchaseList);
   }
 
+  static Future<AWResponseModel<List<AWPurchaseInfo>>> getIosOrderList() async {
+    var result = await _channel.invokeMethod('getOrderList');
+    final model = getResponseModel(result);
+    if (!model.result) {
+      return AWResponseModel.sendFailed(model.msg);
+    }
+    final List<AWPurchaseInfo> purchaseList = [];
+    if (model.data == null) {
+      return AWResponseModel.sendSuccess(purchaseList);
+    }
+    return parseIosOrder(model.data, purchaseList);
+  }
+
   ///获取历史订单列表
   static Future<AWResponseModel<List<AWPurchaseInfo>>> getHistoryOrderList(
-      int platform) async {
-    if (platform == 1) {
+      AwPlatformType type) async {
+    if (type == AwPlatformType.android) {
       return getAndroidHistoryOrderList();
     }
     //ios
@@ -164,9 +236,11 @@ class AwPurchase {
     if (!model.result) {
       return AWResponseModel.sendFailed(model.msg);
     }
-
-    final List purchaseStr = model.data;
     final List<AWPurchaseInfo> purchaseList = [];
+    if (model.data == null) {
+      return AWResponseModel.sendSuccess(purchaseList);
+    }
+    final List purchaseStr = model.data;
     purchaseStr.forEach((purchaseJson) {
       purchaseList.add(AWPurchaseInfo.fromAndroidJson(purchaseJson));
     });
@@ -193,6 +267,23 @@ class AwPurchase {
       return AWResponseModel.sendFailed(model.msg);
     }
     return AWResponseModel.sendSuccess(model.result);
+  }
+
+  ///解析iOS返回的订单数据：供订单列表和恢复购买使用的统一方法
+  static Future<AWResponseModel<List<AWPurchaseInfo>>> parseIosOrder(
+      dynamic purchaseData, List<AWPurchaseInfo> purchaseList) async {
+    //订阅
+    final List subs = purchaseData["subs"] ?? [];
+    subs.forEach((purchaseJson) {
+      purchaseList.add(AWPurchaseInfo.fromIosJson(purchaseJson));
+    });
+
+    //消耗品、非消耗品、非续期订阅
+    final List inapps = purchaseData["inapps"] ?? [];
+    inapps.forEach((purchaseJson) {
+      purchaseList.add(AWPurchaseInfo.fromIosJson(purchaseJson));
+    });
+    return AWResponseModel.sendSuccess(purchaseList);
   }
 
   static bool isSuccess(String result) {

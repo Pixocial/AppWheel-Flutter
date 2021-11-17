@@ -1,4 +1,4 @@
-import 'package:aw_purchase/util/aw_common_util.dart';
+import 'package:appwheel_flutter/util/aw_common_util.dart';
 
 ///用来存放商品信息的，里面的字段既有iOS专用的也有安卓专用的
 class AWProduct {
@@ -9,6 +9,11 @@ class AWProduct {
   late final String productId;
 
   /// 商品类型,安卓使用的:inapp、subs
+  /// 商品类型,ios使用的:
+  /// 0:消耗型商品
+  /// 1：非消耗型商品
+  /// 2：续期订阅
+  /// 3：非续期订阅
   String? productType;
 
   /// 商品类型,ios使用的:
@@ -16,24 +21,24 @@ class AWProduct {
   /// 1：非消耗型商品
   /// 2：续期订阅
   /// 3：非续期订阅
-  int? productTypeInt;
+  // int? productTypeInt;
 
   /// 商品的格式化价格，包括货币符号。此价格不含税。
   late final String price;
 
   /// 商品价格
   /// Android：1000000 个微单位等于 1 单位的货币
-  late final int priceAmount;
+  int? priceAmount;
 
   /// 商品的格式化原价格，包括货币符号。此价格不含税。
-  late final String originalPrice;
+  String? originalPrice;
 
   /// 商品原始价格
   /// Android：1000000 个微单位等于 1 单位的货币
-  late final int originalPriceAmount;
+  int? originalPriceAmount;
 
   /// 货币代码
-  late final String priceCurrency;
+  String? priceCurrency;
 
   /// 商品的标题
   String? title;
@@ -65,10 +70,9 @@ class AWProduct {
   String toString() {
     return '{productId: $productId, \n'
         'productType: ${printParam(productType)}, \n'
-        'productTypeInt: $productTypeInt, \n'
         'price: $price, \n'
         'priceAmount: $priceAmount, \n'
-        'originalPrice: $originalPrice,\n'
+        'originalPrice: ${originalPrice ?? ""},\n'
         ' originalPriceAmount: $originalPriceAmount, \n'
         'priceCurrency: $priceCurrency, \n'
         'title: ${printParam(title)}, \n'
@@ -90,7 +94,7 @@ class AWProduct {
           '\"price_currency_code\":\"${AWCommonUtil.strNotEmpty(priceCurrency) ? priceCurrency : ""}\",'
           '\"price_amount_micros\":\"$priceAmount\",'
           '\"price\":\"${AWCommonUtil.strNotEmpty(price) ? price : ""}\",'
-          '\"original_price_micros\":\"$originalPriceAmount\",'
+          '\"original_price_micros\":\"${originalPriceAmount ?? ""}\",'
           '\"original_price\":\"${AWCommonUtil.strNotEmpty(originalPrice) ? originalPrice : ""}\",'
           '\"description\":\"${AWCommonUtil.strNotEmpty(description) ? description : ""}\"'
           '}';
@@ -118,7 +122,7 @@ class AWProduct {
           '\"price_currency_code\":\"${AWCommonUtil.strNotEmpty(priceCurrency) ? priceCurrency : ""}\",'
           '\"price_amount_micros\":\"$priceAmount\",'
           '\"price\":\"${AWCommonUtil.strNotEmpty(price) ? price : ""}\",'
-          '\"original_price_micros\":\"$originalPriceAmount\",'
+          '\"original_price_micros\":\"${originalPriceAmount ?? ""}\",'
           '\"original_price\":\"${AWCommonUtil.strNotEmpty(originalPrice) ? originalPrice : ""}\",'
           '\"description\":\"${AWCommonUtil.strNotEmpty(description) ? description : ""}\",'
           '\"freeTrialPeriod\":\"${AWCommonUtil.strNotEmpty(freeTrialPeriod) ? freeTrialPeriod : ""}\",'
@@ -128,6 +132,27 @@ class AWProduct {
           '}';
     }
     return '';
+  }
+
+  String toIosJson() {
+    String? introductoryPricePeriod;
+    int? introductoryAmountPrice;
+    int? introductoryPriceCycles;
+    if (introductDiscount != null &&
+        AWCommonUtil.strNotEmpty(introductDiscount?.discountPeriod)) {
+      introductoryPricePeriod = introductDiscount?.discountPeriod;
+      introductoryAmountPrice = introductDiscount?.discountPrice;
+      introductoryPriceCycles = introductDiscount?.discountCycle;
+    }
+    String? freeTrialPeriod;
+    if (discounts != null && discounts![0] != null) {
+      if (AWCommonUtil.strNotEmpty(discounts![0].discountPeriod)) {
+        freeTrialPeriod = discounts![0].discountPeriod;
+      }
+    }
+    return '{\"productIdentifier\":\"$productId\",'
+        '\"productType\":\"$productType\"'
+        '}';
   }
 
   ///android用
@@ -141,6 +166,39 @@ class AWProduct {
     product.originalPriceAmount = json["original_price_micros"];
     product.priceCurrency = json["price_currency_code"];
     product.title = json["title"];
+    if (json["type"] == AWProduct.PRODUCT_TYPE_SUBS) {
+      product.subscriptionPeriod = json["subscriptionPeriod"];
+      if (json["introductoryAmountPrice"] != null &&
+          json["price_currency_code"] != null &&
+          json["price_currency_code"].toString().length > 0 &&
+          json["introductoryPricePeriod"] != null &&
+          json["introductoryPricePeriod"].toString().length > 0 &&
+          json["introductoryPriceCycles"] != null)
+        product.introductDiscount = ProductDiscount.fromAndroidParams(
+            json["introductoryAmountPrice"],
+            json["price_currency_code"],
+            json["introductoryPricePeriod"],
+            json["introductoryPriceCycles"]);
+      product.discounts = json["freeTrialPeriod"] == null ||
+              json["freeTrialPeriod"].toString().length <= 0
+          ? null
+          : [
+              ProductDiscount.fromAndroidParams(
+                  0, json["price_currency_code"], json["freeTrialPeriod"], 1)
+            ];
+    }
+    return product;
+  }
+
+  ///ios用
+  static AWProduct fromIosJson(Map<String, dynamic> json) {
+    final product = AWProduct();
+    product.productId = json["productIdentifier"];
+    product.price = json["localizedPrice"];
+    product.priceAmount = json["price"];
+    // product.priceCurrency = json["price_currency_code"];
+    product.title = json["localizedTitle"];
+    product.description = json["localizedDescription"];
     if (json["type"] == AWProduct.PRODUCT_TYPE_SUBS) {
       product.subscriptionPeriod = json["subscriptionPeriod"];
       if (json["introductoryAmountPrice"] != null &&

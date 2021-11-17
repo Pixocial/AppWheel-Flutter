@@ -1,10 +1,16 @@
-import 'package:aw_purchase/aw_purchase.dart';
-import 'package:aw_purchase/model/aw_purchase_info.dart';
-import 'package:aw_purchase_example/order_detail.dart';
+import 'dart:io';
+
+import 'package:appwheel_flutter/model/aw_base_respon_model.dart';
+import 'package:appwheel_flutter/model/aw_purchase_info.dart';
+import 'package:appwheel_flutter/aw_purchase.dart';
+import 'package:appwheel_flutter/aw_platform_type.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:appwheel_flutter/aw_platform_type.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:oktoast/oktoast.dart';
+
+import 'order_detail.dart';
 
 class HistoryOrderList extends StatefulWidget {
   @override
@@ -31,18 +37,6 @@ class HistoryOrderListState extends State<HistoryOrderList> {
               child: Container(
                 child: createList(),
               ),
-            ),
-            Container(
-              //始终位于页面底部
-              child: TextButton(
-                style: TextButton.styleFrom(
-                  textStyle: const TextStyle(fontSize: 20),
-                ),
-                onPressed: () {
-                  restore();
-                },
-                child: const Text('恢复购买'),
-              ),
             )
           ],
         ),
@@ -67,7 +61,7 @@ class HistoryOrderListState extends State<HistoryOrderList> {
   }
 
   getOrderList() async {
-    final orderListRes = await AwPurchase.getHistoryOrderList(1);
+    final orderListRes = await AwPurchase.getHistoryOrderList(AwPlatformType.android);
     final list = orderListRes.data ?? [];
     this.orderList = list;
     //请求到数据之后刷新界面
@@ -91,19 +85,5 @@ class HistoryOrderListState extends State<HistoryOrderList> {
     );
   }
 
-  restore() async {
-    EasyLoading.show(status: "loading");
-    final res = await AwPurchase.restore(1);
-    EasyLoading.dismiss(animation: true);
-    if (!res.result) {
-      showToast(res.msg ?? "");
-    }
-    this.orderList = res.data ?? [];
-    if (orderList.length > 0) {
-      setState(() {});
-      showToast("restore success");
-    } else {
-      showToast("restore success, but no data");
-    }
-  }
+
 }

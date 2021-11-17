@@ -1,6 +1,6 @@
-# aw_purchase_example
+# appwheel_flutter_example
 
-Demonstrates how to use the aw_purchase plugin.
+Demonstrates how to use the appwheel_flutter plugin.
 
 ## Getting Started
 

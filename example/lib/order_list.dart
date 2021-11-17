@@ -1,20 +1,33 @@
-import 'package:aw_purchase/aw_purchase.dart';
-import 'package:aw_purchase/model/aw_purchase_info.dart';
-import 'package:aw_purchase_example/order_detail.dart';
+import 'dart:io';
+
+import 'package:appwheel_flutter/aw_purchase.dart';
+import 'package:appwheel_flutter/aw_platform_type.dart';
+import 'package:appwheel_flutter/aw_platform_type.dart';
+import 'package:appwheel_flutter/model/aw_base_respon_model.dart';
+import 'package:appwheel_flutter/model/aw_purchase_info.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:oktoast/oktoast.dart';
 
+import 'order_detail.dart';
+
 class OrderList extends StatefulWidget {
+  const OrderList({Key? key}) : super(key: key);
+
   @override
   State<StatefulWidget> createState() {
-    return new OrderListState();
+    return OrderListState();
   }
 }
 
 class OrderListState extends State<OrderList> {
   List<AWPurchaseInfo> orderList = [];
+
+
+  OrderListState() {
+    getOrderList();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,7 +67,6 @@ class OrderListState extends State<OrderList> {
   }
 
   Widget createList() {
-    getOrderList();
     if (orderList.length <= 0) {
       return Text("No Data");
     }
@@ -67,9 +79,16 @@ class OrderListState extends State<OrderList> {
   }
 
   getOrderList() async {
-    final orderListRes = await AwPurchase.getOrderList(1);
-    final list = orderListRes.data ?? [];
+    AWResponseModel? orderListRes;
+    if (Platform.isIOS) {
+      orderListRes = await AwPurchase.getOrderList(AwPlatformType.ios);
+    }
+    if (Platform.isAndroid) {
+      orderListRes = await AwPurchase.getOrderList(AwPlatformType.android);
+    }
+    final list = orderListRes?.data ?? [];
     this.orderList = list;
+
     //请求到数据之后刷新界面
     setState(() {});
   }
@@ -87,18 +106,24 @@ class OrderListState extends State<OrderList> {
               settings: RouteSettings(arguments: info),
             ));
       },
-      child: Text("order id:" + info.orderId),
+      child: Text("order:" + info.productId),
     );
   }
 
   restore() async {
     EasyLoading.show(status: "loading");
-    final res = await AwPurchase.restore(1);
-    EasyLoading.dismiss(animation: true);
-    if (!res.result) {
-      showToast(res.msg ?? "");
+    AWResponseModel? res;
+    if (Platform.isAndroid) {
+      res = await AwPurchase.restore(AwPlatformType.android);
     }
-    this.orderList = res.data ?? [];
+    if (Platform.isIOS) {
+      res = await AwPurchase.restore(AwPlatformType.ios);
+    }
+    EasyLoading.dismiss(animation: true);
+    if (!(res?.result ?? false)) {
+      showToast(res?.msg ?? "");
+    }
+    this.orderList = res?.data ?? [];
     if (orderList.length > 0) {
       setState(() {});
       showToast("restore success");

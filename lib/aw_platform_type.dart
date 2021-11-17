@@ -1,0 +1,4 @@
+enum AwPlatformType {
+  android,
+  ios
+}
