@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:appwheel_flutter/appwheel_flutter.dart';
+import 'package:appwheel_flutter/aw_purchase.dart';
 
 void main() {
   const MethodChannel channel = MethodChannel('appwheel_flutter');
@@ -18,6 +18,6 @@ void main() {
   });
 
   test('getPlatformVersion', () async {
-    expect(await AppwheelFlutter.platformVersion, '42');
+    expect(await AwPurchase.platformVersion, '42');
   });
 }
