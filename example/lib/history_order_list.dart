@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:appwheel_flutter/model/aw_base_respon_model.dart';
-import 'package:appwheel_flutter/model/aw_purchase_info.dart';
+import 'package:appwheel_flutter/model/aw_order.dart';
 import 'package:appwheel_flutter/aw_purchase.dart';
 import 'package:appwheel_flutter/aw_platform_type.dart';
 import 'package:flutter/cupertino.dart';
@@ -20,7 +20,7 @@ class HistoryOrderList extends StatefulWidget {
 }
 
 class HistoryOrderListState extends State<HistoryOrderList> {
-  List<AWPurchaseInfo> orderList = [];
+  List<AWOrder> orderList = [];
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +68,7 @@ class HistoryOrderListState extends State<HistoryOrderList> {
     setState(() {});
   }
 
-  TextButton createItem(AWPurchaseInfo info) {
+  TextButton createItem(AWOrder info) {
     return TextButton(
       style: TextButton.styleFrom(
         textStyle: const TextStyle(fontSize: 20),

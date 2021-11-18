@@ -1,4 +1,4 @@
-class AWPurchaseInfo {
+class AWOrder {
   ///product id
   late String productId;
 
@@ -41,43 +41,43 @@ class AWPurchaseInfo {
   ///过期时间
   String? expireTime;
 
-  static AWPurchaseInfo fromAndroidJson(Map<String, dynamic> json) {
-    final purchaseInfo = AWPurchaseInfo();
-    purchaseInfo.productId = json["productId"];
-    purchaseInfo.orderId = json["orderId"];
-    purchaseInfo.purchaseToken = json["purchaseToken"];
-    purchaseInfo.obfuscatedAccountId = json["obfuscatedAccountId"];
-    purchaseInfo.obfuscatedProfileId = json["obfuscatedProfileId"];
-    purchaseInfo.paymentType = json["paymentType"];
-    purchaseInfo.purchaseTime = json["purchaseTime"];
-    purchaseInfo.purchaseState = json["purchaseState"];
-    purchaseInfo.autoRenewing = json["autoRenewing"];
+  static AWOrder fromAndroidJson(Map<String, dynamic> json) {
+    final order = AWOrder();
+    order.productId = json["productId"];
+    order.orderId = json["orderId"];
+    order.purchaseToken = json["purchaseToken"];
+    order.obfuscatedAccountId = json["obfuscatedAccountId"];
+    order.obfuscatedProfileId = json["obfuscatedProfileId"];
+    order.paymentType = json["paymentType"];
+    order.purchaseTime = json["purchaseTime"];
+    order.purchaseState = json["purchaseState"];
+    order.autoRenewing = json["autoRenewing"];
     if (json["inGracePeriod"] != null) {
-      purchaseInfo.inGracePeriod = json["inGracePeriod"];
+      order.inGracePeriod = json["inGracePeriod"];
     }
-    purchaseInfo.expireTime = json["expireTime"] ?? "";
+    order.expireTime = json["expireTime"] ?? "";
 
-    return purchaseInfo;
+    return order;
   }
 
-  static AWPurchaseInfo fromIosJson(Map<String, dynamic> json) {
-    final purchaseInfo = AWPurchaseInfo();
-    purchaseInfo.productId = json["productIdentifier"];
-    purchaseInfo.orderId = json["originalTransactionId"];
-    purchaseInfo.productType =
+  static AWOrder fromIosJson(Map<String, dynamic> json) {
+    final order = AWOrder();
+    order.productId = json["productIdentifier"];
+    order.orderId = json["originalTransactionId"];
+    order.productType =
         json["productType"] != null ? json["productType"].toString() : "";
-    purchaseInfo.isInIntroPeriod = json["isInIntroPeriod"] ?? false;
+    order.isInIntroPeriod = json["isInIntroPeriod"] ?? false;
     if (json["subscriptionExpiredTime"] != null) {
       final date = DateTime.parse(json["subscriptionExpiredTime"]);
-      purchaseInfo.expireTime = "${date.microsecondsSinceEpoch}";
+      order.expireTime = "${date.microsecondsSinceEpoch}";
     }
 
-    return purchaseInfo;
+    return order;
   }
 
   @override
   String toString() {
-    return 'AWPurchaseInfo{productId: $productId,\n '
+    return 'AWOrder{productId: $productId,\n '
         'orderId: $orderId, \n'
         'paymentType: $paymentType,\n '
         'purchaseTime: ${purchaseTime ?? ""}, \n'

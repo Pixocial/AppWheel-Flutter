@@ -4,7 +4,7 @@ import 'package:appwheel_flutter/aw_purchase.dart';
 import 'package:appwheel_flutter/aw_platform_type.dart';
 import 'package:appwheel_flutter/aw_platform_type.dart';
 import 'package:appwheel_flutter/model/aw_base_respon_model.dart';
-import 'package:appwheel_flutter/model/aw_purchase_info.dart';
+import 'package:appwheel_flutter/model/aw_order.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
@@ -22,7 +22,7 @@ class OrderList extends StatefulWidget {
 }
 
 class OrderListState extends State<OrderList> {
-  List<AWPurchaseInfo> orderList = [];
+  List<AWOrder> orderList = [];
 
 
   OrderListState() {
@@ -93,7 +93,7 @@ class OrderListState extends State<OrderList> {
     setState(() {});
   }
 
-  TextButton createItem(AWPurchaseInfo info) {
+  TextButton createItem(AWOrder info) {
     return TextButton(
       style: TextButton.styleFrom(
         textStyle: const TextStyle(fontSize: 20),

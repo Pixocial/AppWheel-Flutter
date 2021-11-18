@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:appwheel_flutter/model/aw_purchase_info.dart';
+import 'package:appwheel_flutter/model/aw_order.dart';
 import 'package:appwheel_flutter/aw_purchase.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -15,11 +15,11 @@ class OrderDetail extends StatefulWidget {
 }
 
 class OrderDetailState extends State<OrderDetail> {
-  AWPurchaseInfo? orderInfo;
+  AWOrder? orderInfo;
 
   @override
   Widget build(BuildContext context) {
-    orderInfo = ModalRoute.of(context)?.settings.arguments as AWPurchaseInfo;
+    orderInfo = ModalRoute.of(context)?.settings.arguments as AWOrder;
     return OKToast(
         child: Scaffold(
       appBar: AppBar(
