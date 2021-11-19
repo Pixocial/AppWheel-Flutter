@@ -16,8 +16,10 @@ import com.pixocial.purchases.purchase.data.MTGPurchase;
 import com.pixocial.purchases.purchase.listener.InitiatePurchaseListener;
 import com.pixocial.purchases.purchase.listener.OnBillingClientSetupFinishedListener;
 import com.pixocial.purchases.purchase.listener.OnRestorePurchaseListener;
+import com.pixocial.purchases.purchase.listener.OrderObserver;
 import com.pixocial.purchases.purchase.listener.RevokeResponseListener;
 
+import java.util.HashMap;
 import java.util.List;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
@@ -49,7 +51,9 @@ public class AppwheelFlutterPlugin implements FlutterPlugin, MethodCallHandler, 
         channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "appwheel_flutter");
         channel.setMethodCallHandler(this);
         context = flutterPluginBinding.getApplicationContext();
+        addObserver();
     }
+
 
     @Override
     public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
@@ -129,7 +133,7 @@ public class AppwheelFlutterPlugin implements FlutterPlugin, MethodCallHandler, 
     }
 
     private void requestProducts(MethodCall call, Result result) {
-        Log.i(TAG,"调用了请求商品");
+        Log.i(TAG, "调用了请求商品");
         String itemType = call.argument("productType");
         List<String> products = call.argument("products");
         Market.getInstance().getProductsInfo(itemType, products, new OnQueryProductListener() {
@@ -289,5 +293,20 @@ public class AppwheelFlutterPlugin implements FlutterPlugin, MethodCallHandler, 
     @Override
     public void onDetachedFromActivity() {
 
+    }
+
+    /**
+     * 接收统一事件的监听
+     */
+    private void addObserver() {
+        UserOrderManager.getProvider().addPurchaseObserver(new OrderObserver() {
+            @Override
+            public void onUpdateOrders(List<MTGPurchase> purchases) {
+                HashMap<String, Object> map = new HashMap();
+                map.put("platform", 0);
+                map.put("orderList", purchases);
+                channel.invokeMethod("onPurchased", gson.toJson(map));
+            }
+        });
     }
 }
