@@ -81,10 +81,10 @@ class OrderListState extends State<OrderList> {
   getOrderList() async {
     AWResponseModel? orderListRes;
     if (Platform.isIOS) {
-      orderListRes = await AwPurchase.getOrderList(AwPlatformType.ios);
+      orderListRes = await AWPurchase.getOrderList(AwPlatformType.ios);
     }
     if (Platform.isAndroid) {
-      orderListRes = await AwPurchase.getOrderList(AwPlatformType.android);
+      orderListRes = await AWPurchase.getOrderList(AwPlatformType.android);
     }
     final list = orderListRes?.data ?? [];
     this.orderList = list;
@@ -114,10 +114,10 @@ class OrderListState extends State<OrderList> {
     EasyLoading.show(status: "loading");
     AWResponseModel? res;
     if (Platform.isAndroid) {
-      res = await AwPurchase.restore(AwPlatformType.android);
+      res = await AWPurchase.restore(AwPlatformType.android);
     }
     if (Platform.isIOS) {
-      res = await AwPurchase.restore(AwPlatformType.ios);
+      res = await AWPurchase.restore(AwPlatformType.ios);
     }
     EasyLoading.dismiss(animation: true);
     if (!(res?.result ?? false)) {

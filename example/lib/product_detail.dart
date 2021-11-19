@@ -49,10 +49,10 @@ class ProductDetailState extends State<ProductDetailScreen> {
     if (product != null) {
       AWResponseModel? response;
       if (Platform.isAndroid) {
-        response = await AwPurchase.purchase(AwPlatformType.android, product!);
+        response = await AWPurchase.purchase(AwPlatformType.android, product!);
       }
       if (Platform.isIOS) {
-        response = await AwPurchase.purchase(AwPlatformType.ios, product!);
+        response = await AWPurchase.purchase(AwPlatformType.ios, product!);
       }
       EasyLoading.dismiss(animation: true);
       if (response?.result ?? false) {

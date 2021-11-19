@@ -2,12 +2,14 @@
 import 'dart:io';
 
 import 'package:appwheel_flutter/model/aw_base_respon_model.dart';
+import 'package:appwheel_flutter/model/aw_order.dart';
 import 'package:appwheel_flutter_example/product_list.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:appwheel_flutter/aw_purchase.dart';
+import 'package:appwheel_flutter/aw_observer.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:oktoast/oktoast.dart';
 
@@ -42,7 +44,7 @@ class _MyAppState extends State<MyApp> {
     // We also handle the message potentially returning null.
     try {
       platformVersion =
-          await AwPurchase.platformVersion ?? 'Unknown platform version';
+          await AWPurchase.platformVersion ?? 'Unknown platform version';
     } on PlatformException {
       platformVersion = 'Failed to get platform version.';
     }
@@ -65,16 +67,21 @@ class _MyAppState extends State<MyApp> {
             appBar: AppBar(
               title: const Text('AW purchase Demo'),
             ),
-            body: const MyStatelessWidget(),
+            body: MyStatelessWidget(),
           ),
           builder: EasyLoading.init(),
         ));
   }
+
+
 }
 
 /// This is the stateless widget that the main application instantiates.
-class MyStatelessWidget extends StatelessWidget {
-  const MyStatelessWidget({Key? key}) : super(key: key);
+class MyStatelessWidget extends StatelessWidget implements AWObserver{
+  MyStatelessWidget({Key? key}) : super(key: key){
+
+    AWPurchase.setObserver(this);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -120,16 +127,21 @@ class MyStatelessWidget extends StatelessWidget {
       ),
     );
   }
+
+  @override
+  void onPurchased(List<AWOrder> list) {
+    showToast("onPurchasedUpdate");
+  }
 }
 
 /// 初始化
 void _init() async {
   AWResponseModel? res;
   if(Platform.isAndroid) {
-    res = await AwPurchase.init("166", "hykTest");
+    res = await AWPurchase.init("166", "hykTest");
   }
   if (Platform.isIOS) {
-    res = await AwPurchase.init("121", "hykTest");
+    res = await AWPurchase.init("121", "hykTest");
   }
   if (!(res?.result??false)) {
     showToast(
@@ -150,5 +162,4 @@ void _init() async {
       textStyle: TextStyle(fontSize: 18.0),
     );
   }
-
 }

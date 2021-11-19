@@ -21,7 +21,9 @@ class HistoryOrderList extends StatefulWidget {
 
 class HistoryOrderListState extends State<HistoryOrderList> {
   List<AWOrder> orderList = [];
-
+  HistoryOrderListState() {
+    getOrderList();
+  }
   @override
   Widget build(BuildContext context) {
     return OKToast(
@@ -48,7 +50,6 @@ class HistoryOrderListState extends State<HistoryOrderList> {
   }
 
   Widget createList() {
-    getOrderList();
     if (orderList.length <= 0) {
       return Text("No Data");
     }
@@ -61,9 +62,16 @@ class HistoryOrderListState extends State<HistoryOrderList> {
   }
 
   getOrderList() async {
-    final orderListRes = await AwPurchase.getHistoryOrderList(AwPlatformType.android);
-    final list = orderListRes.data ?? [];
+    AWResponseModel? orderListRes;
+    if (Platform.isIOS) {
+      orderListRes = await AWPurchase.getHistoryOrderList(AwPlatformType.ios);
+    }
+    if (Platform.isAndroid) {
+      orderListRes = await AWPurchase.getHistoryOrderList(AwPlatformType.android);
+    }
+    final list = orderListRes?.data ?? [];
     this.orderList = list;
+
     //请求到数据之后刷新界面
     setState(() {});
   }
@@ -81,7 +89,7 @@ class HistoryOrderListState extends State<HistoryOrderList> {
               settings: RouteSettings(arguments: info),
             ));
       },
-      child: Text("order id:" + info.orderId),
+      child: Text("${info.productId}"),
     );
   }
 

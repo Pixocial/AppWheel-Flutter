@@ -78,7 +78,7 @@ class OrderDetailState extends State<OrderDetail> {
 
   revoke() async {
     EasyLoading.show(status: "loading");
-    final res = await AwPurchase.revoke(orderInfo?.productId ?? "");
+    final res = await AWPurchase.revoke(orderInfo?.productId ?? "");
     EasyLoading.dismiss(animation: true);
     if (res.result) {
       showToast("revoke success");
@@ -89,7 +89,7 @@ class OrderDetailState extends State<OrderDetail> {
 
   refund() async {
     EasyLoading.show(status: "loading");
-    final res = await AwPurchase.refund(orderInfo?.productId ?? "");
+    final res = await AWPurchase.refund(orderInfo?.productId ?? "");
     EasyLoading.dismiss(animation: true);
     if (res.result) {
       showToast("refund success");

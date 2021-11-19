@@ -3,13 +3,31 @@
 #import "NSObject+aw.h"
 #import "NSObject+YYModel.h"
 
+@interface AppwheelFlutterPlugin()<AWPurchaseObserver>
+
+@property (nonatomic, retain) FlutterMethodChannel *channel;
+
+@end
+
 @implementation AppwheelFlutterPlugin
+
+- (instancetype)initWithChannel:(FlutterMethodChannel *)channel
+                      registrar:(NSObject <FlutterPluginRegistrar> *)registrar {
+    self = [super init];
+    
+    self.channel = channel;
+    
+    [AWPurchaseKit addPurchaseObserver:self];
+    
+    return self;
+}
+
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
-  FlutterMethodChannel* channel = [FlutterMethodChannel
+    FlutterMethodChannel *channel = [FlutterMethodChannel
       methodChannelWithName:@"appwheel_flutter"
             binaryMessenger:[registrar messenger]];
-  AppwheelFlutterPlugin* instance = [[AppwheelFlutterPlugin alloc] init];
-  [registrar addMethodCallDelegate:instance channel:channel];
+    AppwheelFlutterPlugin *instance = [[AppwheelFlutterPlugin alloc] initWithChannel:channel registrar:registrar];
+    [registrar addMethodCallDelegate:instance channel:channel];
 }
 
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
@@ -56,7 +74,7 @@
 - (void)restore:(NSDictionary*)arguments
          result:(FlutterResult)result {
     [AWPurchaseKit restorePurchaseWithCompletion:^(BOOL isInSubscriptionPeriod, NSArray * _Nonnull validSubscriptions, NSArray * _Nonnull restoredPurchasedItems, AWError * _Nonnull error) {
-        if (error && error.errorCode != AWErrorTypeUnknown) {
+        if (error && error.errorCode != AWErrorTypeUnknown && error.errorCode != AWErrorTypeSubscriptionExpiredInReceipt) {
             [self sendError:result withMsg:error.description];
             return;
         }
@@ -80,6 +98,7 @@
             return;
         }
         [self sendSuccess:result withData:retrievedProducts];
+        
     }];
 }
 - (void)purchase:(NSDictionary*)arguments
@@ -137,7 +156,14 @@
 
 - (void)getHistoryOrderList:(NSDictionary*)arguments
          result:(FlutterResult)result {
-    [self sendSuccess:result withData:[[AWPurchaseKit getPurchaseInfo]getAllSubscriptionsInfo]];
+    
+    NSMutableDictionary *dic = [[NSMutableDictionary alloc]init];
+    //单项
+    dic[@"inapps"] = [[AWPurchaseKit getPurchaseInfo] purchasedArray];
+
+    //订阅
+    dic[@"subs"] =  [[AWPurchaseKit getPurchaseInfo] getAllSubscriptionsInfo];
+    [self sendSuccess:result withData:dic];
 }
 
 - (void)sendSuccess:(FlutterResult)result
@@ -151,6 +177,19 @@
     NSString *errorStr = [self getResponseWithResult:NO withData:nil withMsg:msg];
     result(errorStr);
 }
+
+#pragma mark: - ios回调给flutter
+- (void)purchases:(nonnull AWPurchaseInfo *)purchaseInfo {
+    NSMutableDictionary *dic = [[NSMutableDictionary alloc]init];
+    //单项
+    dic[@"inapps"] = [[AWPurchaseKit getPurchaseInfo] purchasedArray];
+    //订阅
+    dic[@"subs"] =  [[AWPurchaseKit getPurchaseInfo] getValidSubscriptions];
+    dic[@"platform"] =  [NSNumber numberWithInt:1];
+    
+    [self.channel invokeMethod:@"onPurchased" arguments:[self getJSONStringFromDictionary:dic]];
+}
+
 
 #pragma mark: - 组装json数据
 - (NSString *)getResponseWithResult:(Boolean)result
@@ -175,8 +214,6 @@
     NSString *string = [dictionary yy_modelToJSONString];
 
     return string;
-    
-    
 }
 
 @end

@@ -39,7 +39,7 @@ class AWOrder {
   String? inAppOwnershipType;
 
   ///过期时间
-  String? expireTime;
+  int? expireTime;
 
   static AWOrder fromAndroidJson(Map<String, dynamic> json) {
     final order = AWOrder();
@@ -55,7 +55,7 @@ class AWOrder {
     if (json["inGracePeriod"] != null) {
       order.inGracePeriod = json["inGracePeriod"];
     }
-    order.expireTime = json["expireTime"] ?? "";
+    order.expireTime = json["expireTime"] ?? 0;
 
     return order;
   }
@@ -69,7 +69,7 @@ class AWOrder {
     order.isInIntroPeriod = json["isInIntroPeriod"] ?? false;
     if (json["subscriptionExpiredTime"] != null) {
       final date = DateTime.parse(json["subscriptionExpiredTime"]);
-      order.expireTime = "${date.microsecondsSinceEpoch}";
+      order.expireTime = date.microsecondsSinceEpoch;
     }
 
     return order;
@@ -87,6 +87,18 @@ class AWOrder {
         'obfuscatedAccountId: ${obfuscatedAccountId ?? ""},\n'
         ' obfuscatedProfileId: ${obfuscatedProfileId ?? ""}, \n'
         'inGracePeriod: $inGracePeriod,\n '
-        'expireTime: ${expireTime ?? ""}}';
+        'expireTime: ${expireTime ?? 0}}';
   }
+}
+
+class IosProductType {
+  static const String  consumables = "0";
+  static const String  nonConsumables = "1";
+  static const String  renewable = "2";
+  static const String  nonRenewable = "3";
+}
+
+class AndroidProductType {
+  static const int  subs = 1;
+  static const int  inapps = 2;
 }

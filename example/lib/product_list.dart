@@ -205,7 +205,7 @@ class ProductListState extends State<ProductListScreen> {
 
     /// for android
     if (Platform.isAndroid) {
-      var inappRes = await AwPurchase.requestProducts(
+      var inappRes = await AWPurchase.requestProducts(
           AwPlatformType.android, "inapp", getAndroidInAppProducts());
       if ((inappRes?.result ?? false) && inappRes?.data != null) {
         productList.addAll(inappRes?.data as List<AWProduct>);
@@ -214,7 +214,7 @@ class ProductListState extends State<ProductListScreen> {
           showToast(inappRes?.msg as String);
         }
       }
-      var subsRes = await AwPurchase.requestProducts(
+      var subsRes = await AWPurchase.requestProducts(
           AwPlatformType.android, "subs", getAndroidSubsProducts());
 
       if ((subsRes?.result ?? false) && subsRes?.data != null) {
@@ -228,7 +228,7 @@ class ProductListState extends State<ProductListScreen> {
 
     /// for ios
     if (Platform.isIOS) {
-      var iosRes = await AwPurchase.requestProducts(
+      var iosRes = await AWPurchase.requestProducts(
           AwPlatformType.ios, "", getIosProducts());
       if ((iosRes?.result ?? false) && iosRes?.data != null) {
         productList.addAll(iosRes?.data as List<AWProduct>);
