@@ -69,6 +69,10 @@ class HistoryOrderListState extends State<HistoryOrderList> {
     if (Platform.isAndroid) {
       orderListRes = await AWPurchase.getHistoryOrderList(AwPlatformType.android);
     }
+    if (!(orderListRes?.result?? false)){
+      showToast(orderListRes?.msg ??"");
+      return;
+    }
     final list = orderListRes?.data ?? [];
     this.orderList = list;
 

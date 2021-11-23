@@ -56,6 +56,7 @@ class OrderListState extends State<OrderList> {
                 },
                 child: const Text('恢复购买'),
               ),
+              padding: const EdgeInsets.only(bottom: 20)
             )
           ],
         ),
@@ -85,6 +86,10 @@ class OrderListState extends State<OrderList> {
     }
     if (Platform.isAndroid) {
       orderListRes = await AWPurchase.getOrderList(AwPlatformType.android);
+    }
+    if (!(orderListRes?.result?? false)){
+      showToast(orderListRes?.msg ??"");
+      return;
     }
     final list = orderListRes?.data ?? [];
     this.orderList = list;

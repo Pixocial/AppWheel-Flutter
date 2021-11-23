@@ -8,7 +8,7 @@ class AWOrder {
   ///支付类型（1 订阅 2 内购）:android
   int paymentType = 2;
 
-  ///购买时间
+  ///购买时间,ios返回的是string，Android返回的是long
   String? purchaseTime;
 
   ///令牌具有唯一性，用于针对给定商品和用户对的购买进行标识。
@@ -49,7 +49,7 @@ class AWOrder {
     order.obfuscatedAccountId = json["obfuscatedAccountId"];
     order.obfuscatedProfileId = json["obfuscatedProfileId"];
     order.paymentType = json["paymentType"];
-    order.purchaseTime = json["purchaseTime"];
+    order.purchaseTime = "${json["purchaseTime"]?? ""}";
     order.purchaseState = json["purchaseState"];
     order.autoRenewing = json["autoRenewing"];
     if (json["inGracePeriod"] != null) {

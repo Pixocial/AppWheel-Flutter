@@ -130,7 +130,7 @@ class MyStatelessWidget extends StatelessWidget implements AWObserver{
 
   @override
   void onPurchased(List<AWOrder> list) {
-    showToast("onPurchasedUpdate");
+    // showToast("onPurchasedUpdate");
   }
 }
 
