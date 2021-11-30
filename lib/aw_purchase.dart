@@ -8,6 +8,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:appwheel_flutter/aw_platform_type.dart';
+import 'package:appwheel_flutter/model/aw_coupon_model.dart';
 import 'package:flutter/services.dart';
 
 import 'aw_observer.dart';
@@ -301,6 +302,29 @@ class AWPurchase {
   static Future<AWResponseModel<bool>> refund(String productId) async {
     var result =
         await _channel.invokeMethod('refund', {"productId": productId});
+    final model = getResponseModel(result);
+    if (!model.result) {
+      return AWResponseModel.sendFailed(model.msg);
+    }
+    return AWResponseModel.sendSuccess(model.result);
+  }
+
+  ///请求优惠券
+  static Future<AWResponseModel<AWCouponModel>> queryCoupon() async {
+    var result =
+    await _channel.invokeMethod('queryCoupon');
+    final model = getResponseModel(result);
+    if (!model.result) {
+      return AWResponseModel.sendFailed(model.msg);
+    }
+    final coupon = AWCouponModel.fromJson(model.data);
+    return AWResponseModel.sendSuccess(coupon);
+  }
+
+  ///更新优惠券
+  static Future<AWResponseModel<bool>> updateCoupon(int taskId) async {
+    var result =
+    await _channel.invokeMethod('updateCoupon',{"taskId": taskId});
     final model = getResponseModel(result);
     if (!model.result) {
       return AWResponseModel.sendFailed(model.msg);

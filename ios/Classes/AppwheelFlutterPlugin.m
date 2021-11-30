@@ -47,6 +47,10 @@
         [self getOrderList:arguments result:result];
     } else if ([@"getHistoryOrderList" isEqualToString:call.method]) {
         [self getHistoryOrderList:arguments result:result];
+    } else if ([@"queryCoupon" isEqualToString:call.method]) {
+        [self queryCoupon:arguments result:result];
+    } else if ([@"updateCoupon" isEqualToString:call.method]) {
+        [self updateCoupon:arguments result:result];
     }
 
 
@@ -165,6 +169,39 @@
     dic[@"subs"] =  [[AWPurchaseKit getPurchaseInfo] getAllSubscriptionsInfo];
     [self sendSuccess:result withData:dic];
 }
+
+/// 请求优惠券
+- (void)queryCoupon:(NSDictionary*)arguments
+         result:(FlutterResult)result {
+    [AWPurchaseKit queryCouponDetail:^(BOOL success, AWCouponModel * _Nullable model, AWError * _Nullable error) {
+            if (success) {
+                [self sendSuccess:result withData:model];
+                return;
+            }
+            [self sendError:result withMsg:error.errorMessage];
+    }];
+}
+
+/// 更新优惠券
+- (void)updateCoupon:(NSDictionary*)arguments
+         result:(FlutterResult)result {
+    
+    long taskId = [arguments[@"taskId"] longValue];
+    
+    if (!taskId) {
+        [self sendError:result withMsg:@"non taskId"];
+        return;
+    }
+    [AWPurchaseKit updateConponStateWithTaskId:taskId withCompletion:^(BOOL success, AWError * _Nullable error) {
+            if (success) {
+                [self sendSuccess:result withData:nil];
+                return;
+            }
+            [self sendError:result withMsg:error.errorMessage];
+    }];
+    
+}
+
 
 - (void)sendSuccess:(FlutterResult)result
           withData:(__kindof NSObject *_Nullable) data {

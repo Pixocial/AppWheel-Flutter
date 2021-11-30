@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:appwheel_flutter/model/aw_base_respon_model.dart';
 import 'package:appwheel_flutter/model/aw_order.dart';
+import 'package:appwheel_flutter_example/coupon_page.dart';
 import 'package:appwheel_flutter_example/product_list.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
@@ -123,6 +124,16 @@ class MyStatelessWidget extends StatelessWidget implements AWObserver{
             },
             child: const Text('有效订单'),
           ),
+            const SizedBox(height: 30),
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: const TextStyle(fontSize: 20),
+              ),
+              onPressed: () {
+                couponClick(context);
+              },
+              child: const Text('优惠券'),
+            ),
         ],
       ),
     );
@@ -132,6 +143,17 @@ class MyStatelessWidget extends StatelessWidget implements AWObserver{
   void onPurchased(List<AWOrder> list) {
     // showToast("onPurchasedUpdate");
   }
+
+  void couponClick(BuildContext context) {
+
+    if (Platform.isIOS) {
+      Navigator.push(context,
+          MaterialPageRoute(builder: (context) => CouponPage()));
+      return;
+    }
+    showToast("只有iOS能用");
+  }
+
 }
 
 /// 初始化
