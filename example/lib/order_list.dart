@@ -29,6 +29,7 @@ class OrderListState extends State<OrderList> {
     getOrderList();
   }
 
+
   @override
   Widget build(BuildContext context) {
     return OKToast(
@@ -101,7 +102,7 @@ class OrderListState extends State<OrderList> {
   TextButton createItem(AWOrder info) {
     return TextButton(
       style: TextButton.styleFrom(
-        textStyle: const TextStyle(fontSize: 20),
+        textStyle: const TextStyle(fontSize: 14),
       ),
       onPressed: () {
         Navigator.push(

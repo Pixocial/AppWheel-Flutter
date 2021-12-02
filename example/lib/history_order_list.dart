@@ -83,7 +83,7 @@ class HistoryOrderListState extends State<HistoryOrderList> {
   TextButton createItem(AWOrder info) {
     return TextButton(
       style: TextButton.styleFrom(
-        textStyle: const TextStyle(fontSize: 20),
+        textStyle: const TextStyle(fontSize: 14),
       ),
       onPressed: () {
         Navigator.push(

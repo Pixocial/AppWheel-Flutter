@@ -74,7 +74,7 @@ class ProductListState extends State<ProductListScreen> {
   TextButton createItem(String productId) {
     return TextButton(
       style: TextButton.styleFrom(
-        textStyle: const TextStyle(fontSize: 20),
+        textStyle: const TextStyle(fontSize: 14),
       ),
       onPressed: () {
         itemClick(productId);
@@ -95,7 +95,6 @@ class ProductListState extends State<ProductListScreen> {
       "com.meitu.airbrush.vivo.subs_sample_3mo",
       "com.meitu.airbrush.vivo.subs_sample_6mo",
       "com.meitu.airbrush.vivo.subs_sample_12mo",
-      "com.meitu.airbrush.vivo.subs_sample_1we",
       "com.meitu.airbrush.vivo.subs_sample002_4we",
       "com.meitu.airbrush.vivo.subs_sample002_1mo"
     ];

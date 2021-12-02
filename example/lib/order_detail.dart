@@ -16,9 +16,11 @@ class OrderDetail extends StatefulWidget {
 
 class OrderDetailState extends State<OrderDetail> {
   AWOrder? orderInfo;
+  late BuildContext context;
 
   @override
   Widget build(BuildContext context) {
+    this.context = context;
     orderInfo = ModalRoute.of(context)?.settings.arguments as AWOrder;
     return OKToast(
         child: Scaffold(
@@ -122,6 +124,7 @@ class OrderDetailState extends State<OrderDetail> {
     EasyLoading.dismiss(animation: true);
     if (res.result) {
       showToast("consume success");
+      Navigator.pop(context);
       return;
     }
     showToast(res.msg ?? "");
