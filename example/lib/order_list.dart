@@ -127,6 +127,7 @@ class OrderListState extends State<OrderList> {
     EasyLoading.dismiss(animation: true);
     if (!(res?.result ?? false)) {
       showToast(res?.msg ?? "");
+      return;
     }
     this.orderList = res?.data ?? [];
     if (orderList.length > 0) {

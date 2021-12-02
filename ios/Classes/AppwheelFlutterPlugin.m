@@ -67,7 +67,7 @@
     
     [AWPurchaseKit configureWithAppId:appId uid:userId completion:^(BOOL success, AWError * _Nonnull error) {
         if (!success) {
-            [self sendError:result withMsg:error.description];
+            [self sendError:result withMsg:error.errorMessage];
             return;
         }
         [self sendSuccess:result withData:nil];
@@ -79,7 +79,7 @@
          result:(FlutterResult)result {
     [AWPurchaseKit restorePurchaseWithCompletion:^(BOOL isInSubscriptionPeriod, NSArray * _Nonnull validSubscriptions, NSArray * _Nonnull restoredPurchasedItems, AWError * _Nonnull error) {
         if (error && error.errorCode != AWErrorTypeUnknown && error.errorCode != AWErrorTypeSubscriptionExpiredInReceipt) {
-            [self sendError:result withMsg:error.description];
+            [self sendError:result withMsg:error.errorMessage];
             return;
         }
         NSMutableDictionary *dic = [[NSMutableDictionary alloc]init];
@@ -116,7 +116,7 @@
         }
         [AWPurchaseKit purchaseProductWithProductIdentifier:product.productIdentifier quantity:1 productType:product.productType completion:^(BOOL success, AWError * _Nonnull error) {
             if (!success) {
-                [self sendError:result withMsg:error.description];
+                [self sendError:result withMsg:error.errorMessage];
                 return;
             }
             //从订单中把当前的订单返回

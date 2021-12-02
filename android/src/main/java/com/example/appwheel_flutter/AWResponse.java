@@ -1,10 +1,12 @@
 package com.example.appwheel_flutter;
 
+import java.io.Serializable;
+
 /**
  * @author: Mr.H
  * @date: 2021/11/11
  */
-public class AWResponse <T> {
+public class AWResponse <T> implements Serializable {
 
     public boolean result;
     public T data;

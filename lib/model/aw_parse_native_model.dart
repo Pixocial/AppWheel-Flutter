@@ -8,7 +8,7 @@ class AWParseNativeModel {
   AWParseNativeModel(this.result, this.data, this.msg);
 
   AWParseNativeModel.fromJson(Map<String, dynamic> json)
-      : result = json["result"],
+      : result = json["result"] ?? false,
         data = json["data"],
-        msg = json["msg"];
+        msg = json["msg"] ?? "";
 }

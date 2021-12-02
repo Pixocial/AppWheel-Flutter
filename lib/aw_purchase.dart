@@ -9,6 +9,7 @@ import 'dart:io';
 
 import 'package:appwheel_flutter/aw_platform_type.dart';
 import 'package:appwheel_flutter/model/aw_coupon_model.dart';
+import 'package:appwheel_flutter/model/up_or_down_grade_model.dart';
 import 'package:flutter/services.dart';
 
 import 'aw_observer.dart';
@@ -18,19 +19,21 @@ import 'model/aw_product.dart';
 import 'model/aw_order.dart';
 
 class AWPurchase {
-
   static AWObserver? observer;
-  static final MethodChannel _channel = MethodChannel('appwheel_flutter')..setMethodCallHandler((MethodCall call) async {
-    switch (call.method) {
-      case "onPurchased": handleOnPurchased(call);
-    }
-  } );
+  static final MethodChannel _channel = MethodChannel('appwheel_flutter')
+    ..setMethodCallHandler((MethodCall call) async {
+      switch (call.method) {
+        case "onPurchased":
+          handleOnPurchased(call);
+      }
+    });
 
-  static handleOnPurchased(MethodCall call){
+  static handleOnPurchased(MethodCall call) {
     final result = json.decode(call.arguments);
 
     int platform = result["platform"];
     List<AWOrder> purchaseList = [];
+
     /// ios
     if (platform == AwPlatformType.ios.index) {
       //订阅
@@ -44,6 +47,7 @@ class AWPurchase {
         purchaseList.add(AWOrder.fromIosJson(purchaseJson));
       }
     }
+
     /// android
     if (platform == AwPlatformType.android.index) {
       final List purchaseStr = result["orderList"];
@@ -54,8 +58,6 @@ class AWPurchase {
 
     observer?.onPurchased(purchaseList);
   }
-
-
 
   static Future<String?> get platformVersion async {
     final String? version = await _channel.invokeMethod('getPlatformVersion');
@@ -214,6 +216,35 @@ class AWPurchase {
     return AWResponseModel.sendSuccess(purchaseInfo);
   }
 
+  ///消耗安卓的商品
+  static Future<AWResponseModel<String>> consume(AWOrder order) async {
+    // 需要把product解析成安卓需要的数据格式
+    final androidString = order.toAndroidJson();
+    var result =
+        await _channel.invokeMethod('consume', {"order": androidString});
+    final model = getResponseModel(result);
+    if (!model.result) {
+      return AWResponseModel.sendFailed(model.msg);
+    }
+    return AWResponseModel.sendSuccess(model.data);
+  }
+
+  ///升、降级安卓的购买
+  static Future<AWResponseModel<AWOrder>> upOrDownGradePurchase(
+      AWProduct product, UpOrDownGradeModel upOrDownGradeModel) async {
+    // 需要把product解析成安卓需要的数据格式
+    final androidString = product.toAndroidJson();
+    final upOrDownGradeString = upOrDownGradeModel.toString();
+    var result =
+        await _channel.invokeMethod('upOrDownGradePurchase', {"product": androidString,"upOrDownGradeModel": upOrDownGradeString});
+    final model = getResponseModel(result);
+    if (!model.result) {
+      return AWResponseModel.sendFailed(model.msg);
+    }
+    final purchaseInfo = AWOrder.fromAndroidJson(model.data);
+    return AWResponseModel.sendSuccess(purchaseInfo);
+  }
+
   ///获取有效订单列表
   static Future<AWResponseModel<List<AWOrder>>?> getOrderList(
       AwPlatformType type) async {
@@ -311,8 +342,7 @@ class AWPurchase {
 
   ///请求优惠券
   static Future<AWResponseModel<AWCouponModel>> queryCoupon() async {
-    var result =
-    await _channel.invokeMethod('queryCoupon');
+    var result = await _channel.invokeMethod('queryCoupon');
     final model = getResponseModel(result);
     if (!model.result) {
       return AWResponseModel.sendFailed(model.msg);
@@ -324,7 +354,7 @@ class AWPurchase {
   ///更新优惠券
   static Future<AWResponseModel<bool>> updateCoupon(int taskId) async {
     var result =
-    await _channel.invokeMethod('updateCoupon',{"taskId": taskId});
+        await _channel.invokeMethod('updateCoupon', {"taskId": taskId});
     final model = getResponseModel(result);
     if (!model.result) {
       return AWResponseModel.sendFailed(model.msg);
@@ -349,7 +379,8 @@ class AWPurchase {
     return AWResponseModel.sendSuccess(purchaseList);
   }
 
-  static Future<AWResponseModel<List<AWOrder>>> parseAndroidOrder(dynamic result) async{
+  static Future<AWResponseModel<List<AWOrder>>> parseAndroidOrder(
+      dynamic result) async {
     final model = getResponseModel(result);
     if (!model.result) {
       return AWResponseModel.sendFailed(model.msg);
@@ -377,8 +408,6 @@ class AWPurchase {
     return AWParseNativeModel.fromJson(
         json.decode(result) as Map<String, dynamic>);
   }
-
-
 
   static void setObserver(AWObserver observer) {
     AWPurchase.observer = observer;

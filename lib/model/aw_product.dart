@@ -28,7 +28,7 @@ class AWProduct {
 
   /// 商品价格
   /// Android：1000000 个微单位等于 1 单位的货币
-  int? priceAmount;
+  num? priceAmount;
 
   /// 商品的格式化原价格，包括货币符号。此价格不含税。
   String? originalPrice;

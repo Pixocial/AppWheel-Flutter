@@ -10,9 +10,11 @@ import com.google.gson.Gson;
 import com.pixocial.purchases.Billing;
 import com.pixocial.purchases.Market;
 import com.pixocial.purchases.product.data.Product;
+import com.pixocial.purchases.product.data.UpgradeInfo;
 import com.pixocial.purchases.product.listener.OnQueryProductListener;
 import com.pixocial.purchases.purchase.UserOrderManager;
 import com.pixocial.purchases.purchase.data.MTGPurchase;
+import com.pixocial.purchases.purchase.listener.ConsumeResponseListener;
 import com.pixocial.purchases.purchase.listener.InitiatePurchaseListener;
 import com.pixocial.purchases.purchase.listener.OnBillingClientSetupFinishedListener;
 import com.pixocial.purchases.purchase.listener.OnRestorePurchaseListener;
@@ -44,6 +46,7 @@ public class AppwheelFlutterPlugin implements FlutterPlugin, MethodCallHandler, 
     private Result Result;
     private final String TAG = "AWSDK";
     private Gson gson = new Gson();
+    private Boolean isCallInit = false;
 
 
     @Override
@@ -91,6 +94,12 @@ public class AppwheelFlutterPlugin implements FlutterPlugin, MethodCallHandler, 
             case "revoke":
                 revoke(call, result);
                 break;
+            case "consume":
+                consume(call, result);
+                break;
+            case "upOrDownGradePurchase":
+                upOrDownGradePurchase(call, result);
+                break;
             default:
                 result.notImplemented();
                 break;
@@ -98,22 +107,32 @@ public class AppwheelFlutterPlugin implements FlutterPlugin, MethodCallHandler, 
 
     }
 
+
     private void initSDK(MethodCall call, Result result) {
+        isCallInit = true;
         String appId = call.argument("appId");
         String appUserId = call.argument("appUserId");
+        Log.i(TAG,"调用初始化");
         if (!isNullOrEmpty(appId)) {
             Billing.configure(context, appId, appUserId, new OnBillingClientSetupFinishedListener() {
                 @Override
                 public void onBillingSetupFinished(int billingResponseCode) {
-                    if (billingResponseCode == 0) {
-                        sendSuccess(result, null);
-                        return;
+                    if (isCallInit) {
+                        if (billingResponseCode == 0) {
+                            sendSuccess(result, null);
+                            Log.i(TAG,"初始化成功");
+                            return;
+                        }
+                        Log.i(TAG,"初始化失败"+billingResponseCode);
+                        sendError(result, "init error,code:" + billingResponseCode);
                     }
-                    sendError(result, "init error,code:$billingResponseCode");
                 }
             });
         } else {
-            sendError(result, "init error,please set appId");
+            if (isCallInit) {
+                Log.i(TAG,"初始化失败2222");
+                sendError(result, "init error,please set appId");
+            }
         }
     }
 
@@ -126,7 +145,7 @@ public class AppwheelFlutterPlugin implements FlutterPlugin, MethodCallHandler, 
 
             @Override
             public void onError(int resultCode) {
-                sendError(result, "restore error,code$resultCode");
+                sendError(result, "restore error,code:" + resultCode);
 
             }
         });
@@ -140,13 +159,14 @@ public class AppwheelFlutterPlugin implements FlutterPlugin, MethodCallHandler, 
             @Override
             public void onSuccess(List<Product> productInfo) {
                 sendSuccess(result, productInfo);
+                Log.i(TAG, "请求商品成功");
 
             }
 
             @Override
             public void onError(int resultCode) {
-                sendError(result, "request products error,code:$resultCode");
-
+                Log.i(TAG, "请求商品失败"+resultCode);
+                sendError(result, "request products error,code:" + resultCode);
             }
         });
     }
@@ -182,7 +202,7 @@ public class AppwheelFlutterPlugin implements FlutterPlugin, MethodCallHandler, 
                 @Override
                 public void onPurchaseError(int errorCode) {
 
-                    sendError(result, "purchase error,code:$errorCode");
+                    sendError(result, "purchase error,code:" + errorCode);
                 }
             });
             return;
@@ -219,7 +239,7 @@ public class AppwheelFlutterPlugin implements FlutterPlugin, MethodCallHandler, 
             @Override
             public void onFail(String resultCode, String msg) {
 
-                sendError(result, "refund error,msg:$msg,code:$resultCode");
+                sendError(result, "refund error,msg:" + msg + ",code:" + resultCode);
             }
         });
     }
@@ -241,17 +261,81 @@ public class AppwheelFlutterPlugin implements FlutterPlugin, MethodCallHandler, 
             @Override
             public void onFail(String resultCode, String msg) {
 
-                sendError(result, "revoke error,msg:$msg,code:$resultCode");
+                sendError(result, "revoke error,msg:" + msg + ",code:" + resultCode);
             }
         });
     }
 
+    private void upOrDownGradePurchase(MethodCall call, MethodChannel.Result result) {
+        String productString = call.argument("product");
+        String upOrDownGradeString = call.argument("upOrDownGradeModel");
+        if (isNullOrEmpty(productString) || isNullOrEmpty(upOrDownGradeString)) {
+            sendError(result, "product or upOrDownGrade params error");
+            return;
+        }
+        Product product = gson.fromJson(productString, Product.class);
+        UpgradeInfo upgradeInfo = gson.fromJson(upOrDownGradeString, UpgradeInfo.class);
+        if (product == null || upgradeInfo == null) {
+            sendError(result, "product or upOrDownGrade params error");
+            return;
+        }
+        Market.getInstance().purchaseProduct(activity, product, upgradeInfo, new InitiatePurchaseListener() {
+            @Override
+            public void onVerifying(boolean isVerifying) {
+
+            }
+
+            @Override
+            public void onPurchaseSuccess(MTGPurchase purchase) {
+                if (purchase != null) {
+                    sendSuccess(result, purchase);
+                    return;
+                }
+                sendError(result, "the server parse token error");
+            }
+
+            @Override
+            public void onOwnedGoods(MTGPurchase purchase) {
+                sendError(result, "purchase error,already owned");
+            }
+
+            @Override
+            public void onPurchaseError(int errorCode) {
+
+                sendError(result, "purchase error,code:" + errorCode);
+            }
+        });
+    }
+
+    private void consume(MethodCall call, MethodChannel.Result result) {
+        String orderString = call.argument("order");
+        if (isNullOrEmpty(orderString)) {
+            sendError(result, "order error");
+            return;
+        }
+        MTGPurchase mtgPurchase = gson.fromJson(orderString, MTGPurchase.class);
+        if (mtgPurchase == null) {
+            sendError(result, "order error");
+            return;
+        }
+        Market.getInstance().consumePurchaseFlow(mtgPurchase, new ConsumeResponseListener() {
+            @Override
+            public void onConsumeResponse(int resultCode) {
+                if (resultCode == 0) {
+                    sendSuccess(result, "Consume Purchase Success !");
+                    return;
+                }
+                sendError(result, "Consume Purchase Error, code:" + resultCode);
+            }
+        });
+    }
 
     /**
      * 给flutter回调错误的结果
      */
     private void sendError(Result result, String errorMsg) {
         result.success(gson.toJson(new AWResponse(false, "", errorMsg)));
+        isCallInit = false;
     }
 
     /**
@@ -262,7 +346,10 @@ public class AppwheelFlutterPlugin implements FlutterPlugin, MethodCallHandler, 
 //            result.success(gson.toJson(new AWResponse(true, "", "")));
 //            return;
 //        }
-        result.success(gson.toJson(new AWResponse(true, data, "")));
+        AWResponse response = new AWResponse(true, data, "");
+        result.success(gson.toJson(response));
+        Log.i(TAG,"发送的数据,response:"+response.toString()+",gson:"+gson+",json:"+gson.toJson(response));
+        isCallInit = false;
     }
 
     private boolean isNullOrEmpty(String str) {

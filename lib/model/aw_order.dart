@@ -89,6 +89,20 @@ class AWOrder {
         'inGracePeriod: $inGracePeriod,\n '
         'expireTime: ${expireTime ?? 0}}';
   }
+
+  String toAndroidJson() {
+    return '{"productId": \"$productId\",'
+        '\"orderId\": "$orderId",'
+        '\"paymentType\": $paymentType,'
+        '\"purchaseTime\": \"${purchaseTime ?? ""}\",'
+        '\"purchaseToken\": \"${purchaseToken ?? ""}\",'
+        '\"purchaseState\": ${purchaseState ?? 2},'
+        '\"autoRenewing\": $autoRenewing,'
+        '\"obfuscatedAccountId\": \"${obfuscatedAccountId ?? ""}\",'
+        '\"obfuscatedProfileId\": \"${obfuscatedProfileId ?? ""}\",'
+        '\"inGracePeriod\": $inGracePeriod,'
+        '\"expireTime\": ${expireTime ?? 0}}';
+  }
 }
 
 class IosProductType {

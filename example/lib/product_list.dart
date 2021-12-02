@@ -21,7 +21,11 @@ class ProductListState extends State<ProductListScreen> {
   final List<AWProduct> productList = [];
   List<String> skuIds = [];
   late BuildContext context;
+  bool isRequestSuccess = false;
 
+  ProductListState() {
+    _requestProducts();
+  }
   @override
   Widget build(BuildContext context) {
     this.context = context;
@@ -31,123 +35,41 @@ class ProductListState extends State<ProductListScreen> {
         title: Text('product list'),
       ),
       body: Center(
-        child: getListView(),
+        child: createList(),
       ),
     ));
   }
 
-  ListView getListView() {
-    _requestProducts();
-    if (Platform.isAndroid) {
-      return ListView(
-        children: [
-          TextButton(
-            style: TextButton.styleFrom(
-              textStyle: const TextStyle(fontSize: 20),
-            ),
-            onPressed: () {
-              itemClick('com.meitu.airbrush.vivo.unlock_bokeh');
-            },
-            child: const Text('com.meitu.airbrush.vivo.unlock_bokeh'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              textStyle: const TextStyle(fontSize: 20),
-            ),
-            onPressed: () {
-              itemClick('com.meitu.airbrush.vivo.subs_sample_1we');
-            },
-            child: const Text('com.meitu.airbrush.vivo.subs_sample_1we'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              textStyle: const TextStyle(fontSize: 20),
-            ),
-            onPressed: () {
-              itemClick('com.meitu.airbrush.vivo.subs_sample_4we');
-            },
-            child: const Text('com.meitu.airbrush.vivo.subs_sample_4we'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              textStyle: const TextStyle(fontSize: 20),
-            ),
-            onPressed: () {
-              itemClick('com.meitu.airbrush.vivo.subs_sample_1mo');
-            },
-            child: const Text('com.meitu.airbrush.vivo.subs_sample_1mo'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              textStyle: const TextStyle(fontSize: 20),
-            ),
-            onPressed: () {
-              itemClick('com.meitu.airbrush.vivo.subs_sample_3mo');
-            },
-            child: const Text('com.meitu.airbrush.vivo.subs_sample_3mo'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              textStyle: const TextStyle(fontSize: 20),
-            ),
-            onPressed: () {
-              itemClick('com.meitu.airbrush.vivo.subs_sample_6mo');
-            },
-            child: const Text('com.meitu.airbrush.vivo.subs_sample_6mo'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              textStyle: const TextStyle(fontSize: 20),
-            ),
-            onPressed: () {
-              itemClick('com.meitu.airbrush.vivo.subs_sample_12mo');
-            },
-            child: const Text('com.meitu.airbrush.vivo.subs_sample_12mo'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              textStyle: const TextStyle(fontSize: 20),
-            ),
-            onPressed: () {
-              itemClick('com.meitu.airbrush.vivo.subs_sample_1we');
-            },
-            child: const Text('com.meitu.airbrush.vivo.subs_sample_1we'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              textStyle: const TextStyle(fontSize: 20),
-            ),
-            onPressed: () {
-              itemClick('com.meitu.airbrush.vivo.subs_sample002_4we');
-            },
-            child: const Text('com.meitu.airbrush.vivo.subs_sample002_4we'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              textStyle: const TextStyle(fontSize: 20),
-            ),
-            onPressed: () {
-              itemClick('com.meitu.airbrush.vivo.subs_sample002_1mo');
-            },
-            child: const Text('com.meitu.airbrush.vivo.subs_sample002_1mo'),
-          ),
-        ],
-      );
-    } else {
-      ///iOS的sku
-      return createList();
+  Widget createList() {
+    if (!isRequestSuccess) {
+      return Text("");
     }
-  }
-
-  ListView createList() {
-    skuIds = getIosProducts();
     return ListView.builder(
-        itemCount: skuIds.length,
+        itemCount: productList.length,
         itemExtent: 40, //item的高度
         itemBuilder: (BuildContext context, int index) {
-          return createItem(skuIds[index]);
+          return createItem(productList[index].productId);
         });
   }
+
+  // ListView createList() {
+  //   skuIds = getIosProducts();
+  //   return ListView.builder(
+  //       itemCount: skuIds.length,
+  //       itemExtent: 40, //item的高度
+  //       itemBuilder: (BuildContext context, int index) {
+  //         return createItem(skuIds[index]);
+  //       });
+  //   if (isRequestSuccess) {
+  //     return Text("");
+  //   }
+  //   return ListView.builder(
+  //       itemCount: productList.length,
+  //       itemExtent: 40, //item的高度
+  //       itemBuilder: (BuildContext context, int index) {
+  //         return createItem(productList[index].productId);
+  //       });
+  // }
 
   TextButton createItem(String productId) {
     return TextButton(
@@ -197,9 +119,6 @@ class ProductListState extends State<ProductListScreen> {
     ];
   }
 
-  /// 进入详情页面
-  void gotoDetail() {}
-
   _requestProducts() async {
     EasyLoading.show(status: 'loading');
 
@@ -207,6 +126,11 @@ class ProductListState extends State<ProductListScreen> {
     if (Platform.isAndroid) {
       var inappRes = await AWPurchase.requestProducts(
           AwPlatformType.android, "inapp", getAndroidInAppProducts());
+      if (inappRes?.result == false) {
+        showToast(inappRes?.msg ?? "request product error");
+        EasyLoading.dismiss(animation: true);
+        return;
+      }
       if ((inappRes?.result ?? false) && inappRes?.data != null) {
         productList.addAll(inappRes?.data as List<AWProduct>);
       } else {
@@ -216,7 +140,11 @@ class ProductListState extends State<ProductListScreen> {
       }
       var subsRes = await AWPurchase.requestProducts(
           AwPlatformType.android, "subs", getAndroidSubsProducts());
-
+      if (subsRes?.result == false) {
+        showToast(subsRes?.msg ?? "request product error");
+        EasyLoading.dismiss(animation: true);
+        return;
+      }
       if ((subsRes?.result ?? false) && subsRes?.data != null) {
         productList.addAll(subsRes?.data as List<AWProduct>);
       } else {
@@ -225,11 +153,18 @@ class ProductListState extends State<ProductListScreen> {
         }
       }
     }
+    EasyLoading.dismiss(animation: true);
 
     /// for ios
     if (Platform.isIOS) {
       var iosRes = await AWPurchase.requestProducts(
           AwPlatformType.ios, "", getIosProducts());
+
+      EasyLoading.dismiss(animation: true);
+      if (iosRes?.result == false) {
+        showToast(iosRes?.msg ?? "request product error");
+        return;
+      }
       if ((iosRes?.result ?? false) && iosRes?.data != null) {
         productList.addAll(iosRes?.data as List<AWProduct>);
         // set productType,ios need user set productType for yourself
@@ -282,13 +217,13 @@ class ProductListState extends State<ProductListScreen> {
       }
     }
 
-    EasyLoading.dismiss(animation: true);
     if (productList.length <= 0) {
       showToast("request productError");
       return;
     }
-
     showToast("request success");
+    isRequestSuccess = true;
+    setState(() {});
   }
 
   void itemClick(String productId) {

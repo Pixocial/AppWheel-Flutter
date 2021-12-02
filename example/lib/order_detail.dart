@@ -46,34 +46,52 @@ class OrderDetailState extends State<OrderDetail> {
 
   Widget getRevokeView() {
     //revoke just for android subs
-    if (Platform.isAndroid && orderInfo?.paymentType == 1) {
-      return Center(
-        child: Row(
-          children: [
-            TextButton(
-              style: TextButton.styleFrom(
-                textStyle: const TextStyle(fontSize: 20),
+    if (Platform.isAndroid) {
+      if (orderInfo?.paymentType == 1) {
+        return Center(
+          child: Row(
+            children: [
+              TextButton(
+                style: TextButton.styleFrom(
+                  textStyle: const TextStyle(fontSize: 20),
+                ),
+                onPressed: () {
+                  refund();
+                },
+                child: const Text('refund'),
               ),
-              onPressed: () {
-                refund();
-              },
-              child: const Text('refund'),
-            ),
-            TextButton(
-              style: TextButton.styleFrom(
-                textStyle: const TextStyle(fontSize: 20),
+              TextButton(
+                style: TextButton.styleFrom(
+                  textStyle: const TextStyle(fontSize: 20),
+                ),
+                onPressed: () {
+                  revoke();
+                },
+                child: const Text('revoke'),
               ),
-              onPressed: () {
-                revoke();
-              },
-              child: const Text('revoke'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      return Text("");
+            ],
+          ),
+        );
+      }
+      if (orderInfo?.paymentType == 2) {
+        return Center(
+          child: Row(
+            children: [
+              TextButton(
+                style: TextButton.styleFrom(
+                  textStyle: const TextStyle(fontSize: 20),
+                ),
+                onPressed: () {
+                  consume();
+                },
+                child: const Text('consume'),
+              )
+            ],
+          ),
+        );
+      }
     }
+    return Text("");
   }
 
   revoke() async {
@@ -96,5 +114,16 @@ class OrderDetailState extends State<OrderDetail> {
       return;
     }
     showToast("refund failed,${res.msg ?? ""}");
+  }
+
+  consume() async {
+    EasyLoading.show(status: "loading");
+    final res = await AWPurchase.consume(orderInfo!);
+    EasyLoading.dismiss(animation: true);
+    if (res.result) {
+      showToast("consume success");
+      return;
+    }
+    showToast(res.msg ?? "");
   }
 }
