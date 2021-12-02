@@ -21,9 +21,11 @@ class HistoryOrderList extends StatefulWidget {
 
 class HistoryOrderListState extends State<HistoryOrderList> {
   List<AWOrder> orderList = [];
+
   HistoryOrderListState() {
     getOrderList();
   }
+
   @override
   Widget build(BuildContext context) {
     return OKToast(
@@ -67,10 +69,11 @@ class HistoryOrderListState extends State<HistoryOrderList> {
       orderListRes = await AWPurchase.getHistoryOrderList(AwPlatformType.ios);
     }
     if (Platform.isAndroid) {
-      orderListRes = await AWPurchase.getHistoryOrderList(AwPlatformType.android);
+      orderListRes =
+          await AWPurchase.getHistoryOrderList(AwPlatformType.android);
     }
-    if (!(orderListRes?.result?? false)){
-      showToast(orderListRes?.msg ??"");
+    if (!(orderListRes?.result ?? false)) {
+      showToast(orderListRes?.msg ?? "");
       return;
     }
     final list = orderListRes?.data ?? [];
@@ -96,6 +99,4 @@ class HistoryOrderListState extends State<HistoryOrderList> {
       child: Text("${info.productId}"),
     );
   }
-
-
 }

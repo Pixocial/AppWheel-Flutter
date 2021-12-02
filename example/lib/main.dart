@@ -1,4 +1,3 @@
-
 import 'dart:io';
 
 import 'package:appwheel_flutter/model/aw_base_respon_model.dart';
@@ -13,6 +12,7 @@ import 'package:appwheel_flutter/aw_purchase.dart';
 import 'package:appwheel_flutter/aw_observer.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:oktoast/oktoast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'history_order_list.dart';
 import 'order_list.dart';
@@ -29,14 +29,11 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-
-  _MyAppState() {
-    _init();
-  }
   @override
   void initState() {
     super.initState();
   }
+
   @override
   Widget build(BuildContext context) {
     return OKToast(
@@ -45,22 +42,30 @@ class _MyAppState extends State<MyApp> {
             appBar: AppBar(
               title: const Text('AW purchase Demo'),
             ),
-            body: MyStatelessWidget(),
+            body: MyStatefulWidget(),
           ),
           builder: EasyLoading.init(),
         ),
-      duration: Duration(seconds: 3)
-
-    );
+        duration: Duration(seconds: 3));
   }
-
-
 }
 
 /// This is the stateless widget that the main application instantiates.
-class MyStatelessWidget extends StatelessWidget implements AWObserver{
-  MyStatelessWidget({Key? key}) : super(key: key){
+class MyStatefulWidget extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return new MyStatefulWidgetState();
+  }
+}
 
+class MyStatefulWidgetState extends State<MyStatefulWidget>
+    implements AWObserver {
+  String userId = "hykTest";
+  final TextEditingController _controller = TextEditingController();
+
+  MyStatefulWidgetState() {
+    _init();
+    getUserId();
     AWPurchase.setObserver(this);
   }
 
@@ -70,6 +75,25 @@ class MyStatelessWidget extends StatelessWidget implements AWObserver{
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
+          TextField(
+            controller: TextEditingController()..text = userId,
+            decoration: const InputDecoration(
+              hintText: "userId",
+            ),
+            onChanged: (v) {
+              userId = v;
+            },
+          ),
+          TextButton(
+            style: TextButton.styleFrom(
+              textStyle: const TextStyle(fontSize: 20),
+            ),
+            onPressed: () {
+              FocusScope.of(context).requestFocus(FocusNode());
+              _init();
+            },
+            child: const Text('init'),
+          ),
           TextButton(
             style: TextButton.styleFrom(
               textStyle: const TextStyle(fontSize: 20),
@@ -87,7 +111,6 @@ class MyStatelessWidget extends StatelessWidget implements AWObserver{
               textStyle: const TextStyle(fontSize: 20),
             ),
             onPressed: () {
-
               Navigator.push(context,
                   MaterialPageRoute(builder: (context) => HistoryOrderList()));
             },
@@ -104,16 +127,16 @@ class MyStatelessWidget extends StatelessWidget implements AWObserver{
             },
             child: const Text('有效订单'),
           ),
-            const SizedBox(height: 30),
-            TextButton(
-              style: TextButton.styleFrom(
-                textStyle: const TextStyle(fontSize: 20),
-              ),
-              onPressed: () {
-                couponClick(context);
-              },
-              child: const Text('优惠券'),
+          const SizedBox(height: 30),
+          TextButton(
+            style: TextButton.styleFrom(
+              textStyle: const TextStyle(fontSize: 20),
             ),
+            onPressed: () {
+              couponClick(context);
+            },
+            child: const Text('优惠券'),
+          ),
         ],
       ),
     );
@@ -125,29 +148,40 @@ class MyStatelessWidget extends StatelessWidget implements AWObserver{
   }
 
   void couponClick(BuildContext context) {
-
     if (Platform.isIOS) {
-      Navigator.push(context,
-          MaterialPageRoute(builder: (context) => CouponPage()));
+      Navigator.push(
+          context, MaterialPageRoute(builder: (context) => CouponPage()));
       return;
     }
     showToast("只有iOS能用");
   }
 
-}
+  /// 初始化
+  void _init() async {
+    AWResponseModel? res;
+    if (Platform.isAndroid) {
+      res = await AWPurchase.init("166", userId);
+    }
+    if (Platform.isIOS) {
+      res = await AWPurchase.init("121", userId);
+    }
+    if (res?.result == true) {
+      print("启动的userid:$userId");
+      showToast("init success");
 
-/// 初始化
-void _init() async {
-  AWResponseModel? res;
-  if(Platform.isAndroid) {
-    res = await AWPurchase.init("166", "hykTest");
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      print("userId:$userId");
+      prefs.setString("userId", userId);
+      return;
+    }
+    showToast(res?.msg ?? "init error unknow");
   }
-  if (Platform.isIOS) {
-    res = await AWPurchase.init("121", "hykTest");
+
+  void getUserId() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    userId = prefs.getString("userId") ?? "hykTest";
+    setState(() {
+      userId = prefs.getString("userId") ?? "hykTest";
+    });
   }
-  if (res?.result == true) {
-    showToast( "init success");
-    return;
-  }
-  showToast(res?.msg ?? "init error unknow");
 }

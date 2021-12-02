@@ -21,7 +21,7 @@ class OrderList extends StatefulWidget {
   }
 }
 
-class OrderListState extends State<OrderList> {
+class OrderListState extends State<OrderList> with WidgetsBindingObserver {
   List<AWOrder> orderList = [];
 
 
