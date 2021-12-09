@@ -63,7 +63,7 @@
 - (void)initSDK:(NSDictionary*)arguments
          result:(FlutterResult)result {
     int appId = [arguments[@"appId"] intValue];
-    NSString *userId = arguments[@"userId"];
+    NSString *userId = arguments[@"appUserId"];
     
     [AWPurchaseKit configureWithAppId:appId uid:userId completion:^(BOOL success, AWError * _Nonnull error) {
         if (!success) {

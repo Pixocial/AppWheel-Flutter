@@ -74,7 +74,7 @@ class ProductListState extends State<ProductListScreen> {
   TextButton createItem(String productId) {
     return TextButton(
       style: TextButton.styleFrom(
-        textStyle: const TextStyle(fontSize: 14),
+        textStyle: const TextStyle(fontSize: 12),
       ),
       onPressed: () {
         itemClick(productId);
@@ -182,6 +182,7 @@ class ProductListState extends State<ProductListScreen> {
         final nonConsumables = [
           "Brightness",
           "com.commsource.pomelo.lifetime.test",
+          "pro_lifetime",
           "Leak",
           "Freeze",
           "Fade"

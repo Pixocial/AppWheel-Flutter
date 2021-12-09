@@ -64,7 +64,6 @@ class MyStatefulWidgetState extends State<MyStatefulWidget>
   final TextEditingController _controller = TextEditingController();
 
   MyStatefulWidgetState() {
-    _init();
     getUserId();
     AWPurchase.setObserver(this);
   }
@@ -159,6 +158,7 @@ class MyStatefulWidgetState extends State<MyStatefulWidget>
   /// 初始化
   void _init() async {
     AWResponseModel? res;
+    print("启动的userid:$userId");
     if (Platform.isAndroid) {
       res = await AWPurchase.init("166", userId);
     }
@@ -166,7 +166,6 @@ class MyStatefulWidgetState extends State<MyStatefulWidget>
       res = await AWPurchase.init("121", userId);
     }
     if (res?.result == true) {
-      print("启动的userid:$userId");
       showToast("init success");
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -180,6 +179,7 @@ class MyStatefulWidgetState extends State<MyStatefulWidget>
   void getUserId() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     userId = prefs.getString("userId") ?? "hykTest";
+    _init();
     setState(() {
       userId = prefs.getString("userId") ?? "hykTest";
     });

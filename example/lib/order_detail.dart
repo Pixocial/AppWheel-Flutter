@@ -58,18 +58,18 @@ class OrderDetailState extends State<OrderDetail> {
                   textStyle: const TextStyle(fontSize: 20),
                 ),
                 onPressed: () {
-                  refund();
+                  revoke();
                 },
-                child: const Text('refund'),
+                child: const Text('revoke'),
               ),
               TextButton(
                 style: TextButton.styleFrom(
                   textStyle: const TextStyle(fontSize: 20),
                 ),
                 onPressed: () {
-                  revoke();
+                  refund();
                 },
-                child: const Text('revoke'),
+                child: const Text('refund'),
               ),
             ],
           ),
