@@ -102,7 +102,7 @@ class ProductListState extends State<ProductListScreen> {
 
   List<String> getIosProducts() {
     return [
-      "com.commsource.pomelo.subscription.1year.test",
+      "com.commsource.pomelo.subscription.1year.test"
       "com.commsource.pomelo.subscription.1year.newuser",
       "com.commsource.pomelo.subscription.1year.newuser.test",
       "subscription_ye",
@@ -111,6 +111,7 @@ class ProductListState extends State<ProductListScreen> {
       "com.commsource.pomelo.filterPack",
       "Brightness",
       "com.commsource.pomelo.lifetime.test",
+      "pro_lifetime",
       "Leak",
       "Freeze",
       "Fade",
@@ -164,52 +165,12 @@ class ProductListState extends State<ProductListScreen> {
         showToast(iosRes?.msg ?? "request product error");
         return;
       }
+
+      if (AWCommonUtil.strNotEmpty(iosRes?.msg)) {
+        showToast(iosRes?.msg as String);
+      }
       if ((iosRes?.result ?? false) && iosRes?.data != null) {
         productList.addAll(iosRes?.data as List<AWProduct>);
-        // set productType,ios need user set productType for yourself
-        final subs = [
-          "com.commsource.pomelo.subscription.1year.test",
-          "com.commsource.pomelo.subscription.1year.newuser",
-          "com.commsource.pomelo.subscription.1year.newuser.test",
-          "subscription_ye",
-          "subscription_mo",
-          "com.commsource.pomelo.subscription.1month.test",
-          "com.commsource.pomelo.filterPack"
-        ];
-        final consumables = [
-          "com.commsource.pomelo.timespackages"
-        ];
-        final nonConsumables = [
-          "Brightness",
-          "com.commsource.pomelo.lifetime.test",
-          "pro_lifetime",
-          "Leak",
-          "Freeze",
-          "Fade"
-        ];
-        final nonRenewable = [
-          "com.commsource.pomelo.filterPack"
-        ];
-        productList.forEach((pro) {
-          if(consumables.contains( pro.productId)){
-            pro.productType = "0";
-          }
-        });
-        productList.forEach((pro) {
-          if(nonConsumables.contains( pro.productId)){
-            pro.productType = "1";
-          }
-        });
-        productList.forEach((pro) {
-          if(subs.contains( pro.productId)){
-            pro.productType = "2";
-          }
-        });
-        productList.forEach((pro) {
-          if(nonRenewable.contains( pro.productId)){
-            pro.productType = "3";
-          }
-        });
       } else {
         if (AWCommonUtil.strNotEmpty(iosRes?.msg)) {
           showToast(iosRes?.msg as String);

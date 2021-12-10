@@ -17,7 +17,7 @@ A new flutter plugin project.
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
   s.platform = :ios, '10.0'
-  s.dependency 'AppWheel','2.0.0.4'
+  s.dependency 'AppWheel','2.0.1.0'
   s.dependency 'YYModel','1.0.4'
 
   # Flutter.framework does not contain a i386 slice.

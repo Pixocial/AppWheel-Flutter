@@ -2,8 +2,13 @@ import 'package:appwheel_flutter/util/aw_common_util.dart';
 
 ///用来存放商品信息的，里面的字段既有iOS专用的也有安卓专用的
 class AWProduct {
-  static final String PRODUCT_TYPE_INAPP = "inapp";
-  static final String PRODUCT_TYPE_SUBS = "subs";
+  static const String inappProductType = "inapp";
+  static const String subsProductType = "subs";
+
+  static const String consumableProductType = "0";
+  static const String nonConsumableProductType = "1";
+  static const String autoRenewableProductType = "2";
+  static const String nonRenewableProductType = "3";
 
   /// 商品ID
   late final String productId;
@@ -47,7 +52,7 @@ class AWProduct {
   String? description;
 
   /// 商品的购买数量，iOS用
-  String? quantity;
+  int quantity = 1;
 
   /// 是否支持家庭共享，iOS用
   bool isFamilyShareable = false;
@@ -57,10 +62,10 @@ class AWProduct {
   String? subscriptionPeriod;
 
   ///推介促销优惠
-  ProductDiscount? introductDiscount;
+  AWProductDiscount? introductDiscount;
 
   ///普通优惠，安卓的免费也放到这里了
-  List<ProductDiscount>? discounts;
+  List<AWProductDiscount>? discounts;
 
   ///ios用
   ///订阅群组,ios 用
@@ -77,7 +82,7 @@ class AWProduct {
         'priceCurrency: $priceCurrency, \n'
         'title: ${printParam(title)}, \n'
         'description: ${printParam(description)}, \n'
-        'quantity: ${printParam(quantity)}, \n'
+        'quantity: ${quantity}, \n'
         'isFamilyShareable: $isFamilyShareable, \n'
         'subscriptionPeriod: ${printParam(subscriptionPeriod)}, \n'
         'introductDiscount: $introductDiscount, \n'
@@ -87,7 +92,7 @@ class AWProduct {
 
   String toAndroidJson() {
     if (AWCommonUtil.strNotEmpty(productType) &&
-        productType == PRODUCT_TYPE_INAPP) {
+        productType == inappProductType) {
       return '{\"productId\":\"$productId\",'
           '\"type\":\"$productType\",'
           '\"title\":\"${AWCommonUtil.strNotEmpty(title) ? title : ""}\",'
@@ -100,14 +105,14 @@ class AWProduct {
           '}';
     }
     if (AWCommonUtil.strNotEmpty(productType) &&
-        productType == PRODUCT_TYPE_SUBS) {
+        productType == subsProductType) {
       String? introductoryPricePeriod;
       int? introductoryAmountPrice;
       int? introductoryPriceCycles;
       if (introductDiscount != null &&
           AWCommonUtil.strNotEmpty(introductDiscount?.discountPeriod)) {
         introductoryPricePeriod = introductDiscount?.discountPeriod;
-        introductoryAmountPrice = introductDiscount?.discountPrice;
+        introductoryAmountPrice = introductDiscount?.discountPriceAmount;
         introductoryPriceCycles = introductDiscount?.discountCycle;
       }
       String? freeTrialPeriod;
@@ -141,7 +146,7 @@ class AWProduct {
     if (introductDiscount != null &&
         AWCommonUtil.strNotEmpty(introductDiscount?.discountPeriod)) {
       introductoryPricePeriod = introductDiscount?.discountPeriod;
-      introductoryAmountPrice = introductDiscount?.discountPrice;
+      introductoryAmountPrice = introductDiscount?.discountPriceAmount;
       introductoryPriceCycles = introductDiscount?.discountCycle;
     }
     String? freeTrialPeriod;
@@ -166,7 +171,7 @@ class AWProduct {
     product.originalPriceAmount = json["original_price_micros"];
     product.priceCurrency = json["price_currency_code"];
     product.title = json["title"];
-    if (json["type"] == AWProduct.PRODUCT_TYPE_SUBS) {
+    if (json["type"] == AWProduct.subsProductType) {
       product.subscriptionPeriod = json["subscriptionPeriod"];
       if (json["introductoryAmountPrice"] != null &&
           json["price_currency_code"] != null &&
@@ -174,7 +179,7 @@ class AWProduct {
           json["introductoryPricePeriod"] != null &&
           json["introductoryPricePeriod"].toString().length > 0 &&
           json["introductoryPriceCycles"] != null)
-        product.introductDiscount = ProductDiscount.fromAndroidParams(
+        product.introductDiscount = AWProductDiscount.fromAndroidParams(
             json["introductoryAmountPrice"],
             json["price_currency_code"],
             json["introductoryPricePeriod"],
@@ -183,7 +188,7 @@ class AWProduct {
               json["freeTrialPeriod"].toString().length <= 0
           ? null
           : [
-              ProductDiscount.fromAndroidParams(
+        AWProductDiscount.fromAndroidParams(
                   0, json["price_currency_code"], json["freeTrialPeriod"], 1)
             ];
     }
@@ -196,47 +201,84 @@ class AWProduct {
     product.productId = json["productIdentifier"];
     product.price = json["localizedPrice"];
     product.priceAmount = json["price"];
-    // product.priceCurrency = json["price_currency_code"];
     product.title = json["localizedTitle"];
     product.description = json["localizedDescription"];
-    if (json["type"] == AWProduct.PRODUCT_TYPE_SUBS) {
-      product.subscriptionPeriod = json["subscriptionPeriod"];
-      if (json["introductoryAmountPrice"] != null &&
-          json["price_currency_code"] != null &&
-          json["price_currency_code"].toString().length > 0 &&
-          json["introductoryPricePeriod"] != null &&
-          json["introductoryPricePeriod"].toString().length > 0 &&
-          json["introductoryPriceCycles"] != null)
-        product.introductDiscount = ProductDiscount.fromAndroidParams(
-            json["introductoryAmountPrice"],
-            json["price_currency_code"],
-            json["introductoryPricePeriod"],
-            json["introductoryPriceCycles"]);
-      product.discounts = json["freeTrialPeriod"] == null ||
-              json["freeTrialPeriod"].toString().length <= 0
-          ? null
-          : [
-              ProductDiscount.fromAndroidParams(
-                  0, json["price_currency_code"], json["freeTrialPeriod"], 1)
-            ];
+    product.subscriptionPeriod = getIosPeriod(json["subscriptionPeriod"]);
+    product.subscriptionGroupId = json["subscriptionGroupIdentifier"];
+
+    //推介促销
+    final introductoryInfo = json["introductoryPrice"];
+    if (introductoryInfo != null) {
+      product.introductDiscount = AWProductDiscount.fromIosParams(
+          introductoryInfo["discountIdentifier"],
+          introductoryInfo["discountLocalizedPrice"],
+          introductoryInfo["discountPrice"],
+          getIosPeriod(introductoryInfo["discountPeriod"]),
+          introductoryInfo["numberOfDiscountPeriod"],
+          introductoryInfo["discountPaymentMode"]);
     }
+    product.discounts = getIosDiscount(json);
     return product;
+  }
+
+  static List<AWProductDiscount>? getIosDiscount(Map<String, dynamic> json) {
+    List sourceDiscountList = json["discounts"] ?? [];
+    if (sourceDiscountList.isEmpty) {
+      return null;
+    }
+    List<AWProductDiscount> discountList = [];
+    sourceDiscountList.forEach((discount) {
+      final period = getIosPeriod(discount["discountPeriod"]);
+      discountList.add(AWProductDiscount.fromIosParams(
+          discount["discountIdentifier"],
+          discount["discountLocalizedPrice"],
+          discount["discountPrice"],
+          period,
+          discount["numberOfDiscountPeriod"],
+          discount["discountPaymentMode"]));
+    });
+    return discountList;
+  }
+
+  static String getIosPeriod(Map<String, dynamic>? json) {
+    if (json == null) {
+      return "";
+    }
+    final unit = json["unitType"];
+    final number = json["numberOfDiscountUnits"] ?? -1;
+    var period = "";
+    switch (number) {
+      case 0:
+        period = "P${unit}D";
+        break;
+      case 1:
+        period = "P${unit}W";
+        break;
+      case 2:
+        period = "P${unit}M";
+        break;
+      case 3:
+        period = "P${unit}Y";
+        break;
+    }
+    return period;
   }
 }
 
 /// 商品的折扣, ios 用
-class ProductDiscount {
+class AWProductDiscount {
   ///优惠的id
-  late String? discountId;
+  String? discountId;
 
   ///优惠的价格
-  late int? discountPrice;
+  String? discountPrice;
+  int? discountPriceAmount;
 
   ///优惠的价格货币代码
-  late String? discountPriceCurrency;
+  String? discountPriceCurrency;
 
   ///优惠的周期：采用 ISO 8601 格式指定。例如，P7D 相当于七天
-  late String? discountPeriod;
+  String? discountPeriod;
 
   ///优惠的支付方式
   ///0：PayAsYouGo
@@ -247,15 +289,26 @@ class ProductDiscount {
   ///优惠循环几次
   late int? discountCycle;
 
-  ProductDiscount.fromAndroidParams(
-      int? price, String? priceCurrency, String? period, int? cycles)
+  ///解析Android的优惠到flutter
+  AWProductDiscount.fromAndroidParams(
+      int? priceAmount, String? priceCurrency, String? period, int? cycles)
       : discountId = "",
-        discountPrice = price,
+        discountPriceAmount = priceAmount,
         discountPriceCurrency = priceCurrency,
         discountPeriod = period,
         discountCycle = cycles,
         //如果周期大于1那就是随用随付，等于1就是一次性付款了
         discountPaymentModel = (cycles != null && cycles > 1) ? 0 : 1;
+
+  ///解析iOS的优惠到flutter
+  AWProductDiscount.fromIosParams(String? id, String? price, int? priceAmount,
+      String? period, int? cycles, int? discountPaymentMode)
+      : discountId = id,
+        discountPrice = price,
+        discountPriceAmount = priceAmount,
+        discountPeriod = period,
+        discountCycle = cycles,
+        discountPaymentModel = discountPaymentMode;
 
   @override
   String toString() {

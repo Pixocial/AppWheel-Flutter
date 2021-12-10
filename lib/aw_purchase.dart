@@ -178,12 +178,15 @@ class AWPurchase {
   /// 购买商品
   /// platform 平台，1：Android，2：iOS
   static Future<AWResponseModel<AWOrder>?> purchase(
-      AwPlatformType type, AWProduct product) async {
+      AwPlatformType type, AWProduct product,{String productType = "",int quantity = 1, AWProductDiscount? discount}) async {
     if (type == AwPlatformType.android) {
       return purchaseAndroid(product);
     }
     if (type == AwPlatformType.ios) {
-      return purchaseIos(product);
+      if (productType == "") {
+        return AWResponseModel.sendFailed("need set productType");
+      }
+      return purchaseIos(product,productType,quantity,discount);
     }
   }
 
@@ -203,11 +206,13 @@ class AWPurchase {
   }
 
   ///购买iOS的商品
-  static Future<AWResponseModel<AWOrder>> purchaseIos(AWProduct product) async {
+  static Future<AWResponseModel<AWOrder>> purchaseIos(AWProduct product,String productType,int quantity,AWProductDiscount? discount) async {
+    product.productType = productType;
+    product.quantity = quantity;
     // 需要把product解析成安卓需要的数据格式
     final iosString = product.toIosJson();
     var result =
-        await _channel.invokeMethod('purchase', {"product": iosString});
+        await _channel.invokeMethod('purchase', {"product": iosString,"discountId":discount?.discountId??""});
     final model = getResponseModel(result);
     if (!model.result) {
       return AWResponseModel.sendFailed(model.msg);

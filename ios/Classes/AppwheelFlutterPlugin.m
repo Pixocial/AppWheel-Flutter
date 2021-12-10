@@ -87,7 +87,7 @@
         dic[@"inapps"] = [[AWPurchaseKit getPurchaseInfo] purchasedArray];
         
         //订阅
-        dic[@"subs"] =  [[AWPurchaseKit getPurchaseInfo] getValidSubscriptions];
+        dic[@"subs"] =  [[AWPurchaseKit getPurchaseInfo] getCurrentValidSubscriptions];
         
         [self sendSuccess:result withData:dic];
         
@@ -108,43 +108,71 @@
 - (void)purchase:(NSDictionary*)arguments
          result:(FlutterResult)result {
     AWProduct *product = [AWProduct yy_modelWithJSON:arguments[@"product"]];
-
+    NSString *discountId = arguments[@"discountId"];
+    
     if (product) {
         if (!product.productIdentifier) {
             [self sendError:result withMsg:@"productId can not be null"];
             return;
         }
-        [AWPurchaseKit purchaseProductWithProductIdentifier:product.productIdentifier quantity:1 productType:product.productType completion:^(BOOL success, AWError * _Nonnull error) {
-            if (!success) {
-                [self sendError:result withMsg:error.errorMessage];
+    //使用了优惠
+    if (discountId && discountId.length > 0) {
+        [AWPurchaseKit fetchSubscriptionOfferWithProductIdentifier:product.productIdentifier subscriptionOfferIdentifier:discountId completion:^(AWPaymentDiscountOffer * _Nullable paymentDiscount, AWError * _Nonnull error) {
+            if (error.errorCode != 0) {
+                [self sendError:result withMsg:[NSString stringWithFormat:@"Fetch payment discount failed. Error message: %@", error.errorMessage]];
                 return;
             }
-            //从订单中把当前的订单返回
-            if (product.productType == 2) {
-                LatestSubscriptionInfo *currentInfo;
-                for (LatestSubscriptionInfo *info in [[AWPurchaseKit getPurchaseInfo]getCurrentValidSubscriptions]) {
-                    if ([info.productIdentifier isEqualToString:product.productIdentifier]) {
-                        currentInfo = info;
-                        break;
-                    }
-                }
-                
-                [self sendSuccess:result withData:currentInfo];
-            }
-            PurchasedProduct *currentOrder;
-            for (PurchasedProduct *product in [[AWPurchaseKit getPurchaseInfo] purchasedArray]) {
-                if ([product.productIdentifier isEqualToString:product.productIdentifier]) {
-                    currentOrder = product;
-                    break;
-                }
-            }
-            
-            [self sendSuccess:result withData:currentOrder];
+            [self handlerPurchaseWithId:product.productIdentifier paymentDiscount:paymentDiscount quantity:product.quantity productType:product.productType result:result];
+                    
         }];
+        return;
+    }
+    //没有使用优惠
+    [self handlerPurchaseWithId:product.productIdentifier paymentDiscount:nil quantity:product.quantity productType:product.productType result:result];
+
     } else {
         [self sendError:result withMsg:@"productId can not be null"];
     }
 }
+
+- (void)handlerPurchaseWithId:(NSString *)productIdentifier
+                             paymentDiscount:(AWPaymentDiscountOffer * _Nullable)paymentDiscount
+                                    quantity:(NSInteger)quantity
+                                 productType:(AWProductType)productType
+                                      result:(FlutterResult)result {
+    __weak __typeof(self) weakSelf = self;
+    [AWPurchaseKit purchaseProductWithProductIdentifier:productIdentifier paymentDiscount:paymentDiscount quantity:1 productType:productType completion:^(BOOL success, AWError * _Nonnull error) {
+        __strong __typeof(weakSelf) strongSelf = weakSelf;
+        if (!success) {
+            [strongSelf sendError:result withMsg:error.errorMessage];
+            return;
+        }
+        //从订单中把当前的订单返回
+        if (productType == AWProductTypeAutoRenewable) {
+            LatestSubscriptionInfo *currentInfo;
+            for (LatestSubscriptionInfo *info in [[AWPurchaseKit getPurchaseInfo]getCurrentValidSubscriptions]) {
+                if ([info.productIdentifier isEqualToString:productIdentifier]) {
+                    currentInfo = info;
+                    break;
+                }
+            }
+            
+            [strongSelf sendSuccess:result withData:currentInfo];
+            return;
+        }
+        PurchasedProduct *currentOrder;
+        for (PurchasedProduct *product in [[AWPurchaseKit getPurchaseInfo] purchasedArray]) {
+            if ([product.productIdentifier isEqualToString:product.productIdentifier]) {
+                currentOrder = product;
+                break;
+            }
+        }
+        
+        [strongSelf sendSuccess:result withData:currentOrder];
+    }];
+}
+
+
 
 - (void)getOrderList:(NSDictionary*)arguments
          result:(FlutterResult)result {
@@ -153,7 +181,7 @@
     dic[@"inapps"] = [[AWPurchaseKit getPurchaseInfo] purchasedArray];
     
     //订阅
-    dic[@"subs"] =  [[AWPurchaseKit getPurchaseInfo] getValidSubscriptions];
+    dic[@"subs"] =  [[AWPurchaseKit getPurchaseInfo] getCurrentValidSubscriptions];
     [self sendSuccess:result withData:dic];
     
 }
@@ -221,7 +249,7 @@
     //单项
     dic[@"inapps"] = [[AWPurchaseKit getPurchaseInfo] purchasedArray];
     //订阅
-    dic[@"subs"] =  [[AWPurchaseKit getPurchaseInfo] getValidSubscriptions];
+    dic[@"subs"] =  [[AWPurchaseKit getPurchaseInfo] getCurrentValidSubscriptions];
     dic[@"platform"] =  [NSNumber numberWithInt:1];
     
     [self.channel invokeMethod:@"onPurchased" arguments:[self getJSONStringFromDictionary:dic]];

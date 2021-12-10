@@ -1,7 +1,7 @@
 PODS:
-  - AppWheel (2.0.0.4)
+  - AppWheel (2.0.1.0)
   - appwheel_flutter (0.0.1):
-    - AppWheel (= 2.0.0.4)
+    - AppWheel (= 2.0.1.0)
     - Flutter
     - YYModel (= 1.0.4)
   - device_info (0.0.1):
@@ -33,8 +33,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/shared_preferences_ios/ios"
 
 SPEC CHECKSUMS:
-  AppWheel: 9cd5cd91d868049703fffac312bec02cd1f3569f
-  appwheel_flutter: 4263cf1114e79457d0e8fa7c6b8a57aa1cc5fd68
+  AppWheel: 76af4b03e10916ebd22cd5ea3def3db7c9e2017a
+  appwheel_flutter: 7056d4374973c74421b007d48c2bce2eb4359c19
   device_info: d7d233b645a32c40dfdc212de5cf646ca482f175
   Flutter: 50d75fe2f02b26cc09d224853bb45737f8b3214a
   shared_preferences_ios: aef470a42dc4675a1cdd50e3158b42e3d1232b32
