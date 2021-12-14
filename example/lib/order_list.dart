@@ -102,7 +102,7 @@ class OrderListState extends State<OrderList> with WidgetsBindingObserver {
   TextButton createItem(AWOrder info) {
     return TextButton(
       style: TextButton.styleFrom(
-        textStyle: const TextStyle(fontSize: 14),
+        textStyle: const TextStyle(fontSize: 12),
       ),
       onPressed: () {
         Navigator.push(
@@ -112,7 +112,7 @@ class OrderListState extends State<OrderList> with WidgetsBindingObserver {
               settings: RouteSettings(arguments: info),
             ));
       },
-      child: Text("order:" + info.productId),
+      child: Text(info.productId),
     );
   }
 

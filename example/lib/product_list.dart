@@ -22,6 +22,7 @@ class ProductListState extends State<ProductListScreen> {
   List<String> skuIds = [];
   late BuildContext context;
   bool isRequestSuccess = false;
+  bool requestFinish = false;
 
   ProductListState() {
     _requestProducts();
@@ -29,6 +30,9 @@ class ProductListState extends State<ProductListScreen> {
   @override
   Widget build(BuildContext context) {
     this.context = context;
+    if (!requestFinish) {
+      EasyLoading.show(status: 'loading');
+    }
     return OKToast(
         child: Scaffold(
       appBar: AppBar(
@@ -51,25 +55,6 @@ class ProductListState extends State<ProductListScreen> {
           return createItem(productList[index].productId);
         });
   }
-
-  // ListView createList() {
-  //   skuIds = getIosProducts();
-  //   return ListView.builder(
-  //       itemCount: skuIds.length,
-  //       itemExtent: 40, //item的高度
-  //       itemBuilder: (BuildContext context, int index) {
-  //         return createItem(skuIds[index]);
-  //       });
-  //   if (isRequestSuccess) {
-  //     return Text("");
-  //   }
-  //   return ListView.builder(
-  //       itemCount: productList.length,
-  //       itemExtent: 40, //item的高度
-  //       itemBuilder: (BuildContext context, int index) {
-  //         return createItem(productList[index].productId);
-  //       });
-  // }
 
   TextButton createItem(String productId) {
     return TextButton(
@@ -102,7 +87,7 @@ class ProductListState extends State<ProductListScreen> {
 
   List<String> getIosProducts() {
     return [
-      "com.commsource.pomelo.subscription.1year.test"
+      "com.commsource.pomelo.subscription.1year.test",
       "com.commsource.pomelo.subscription.1year.newuser",
       "com.commsource.pomelo.subscription.1year.newuser.test",
       "subscription_ye",
@@ -120,7 +105,6 @@ class ProductListState extends State<ProductListScreen> {
   }
 
   _requestProducts() async {
-    EasyLoading.show(status: 'loading');
 
     /// for android
     if (Platform.isAndroid) {
@@ -159,7 +143,7 @@ class ProductListState extends State<ProductListScreen> {
     if (Platform.isIOS) {
       var iosRes = await AWPurchase.requestProducts(
           AwPlatformType.ios, "", getIosProducts());
-
+      requestFinish = true;
       EasyLoading.dismiss(animation: true);
       if (iosRes?.result == false) {
         showToast(iosRes?.msg ?? "request product error");

@@ -107,7 +107,7 @@ class AWProduct {
     if (AWCommonUtil.strNotEmpty(productType) &&
         productType == subsProductType) {
       String? introductoryPricePeriod;
-      int? introductoryAmountPrice;
+      num? introductoryAmountPrice;
       int? introductoryPriceCycles;
       if (introductDiscount != null &&
           AWCommonUtil.strNotEmpty(introductDiscount?.discountPeriod)) {
@@ -141,7 +141,7 @@ class AWProduct {
 
   String toIosJson() {
     String? introductoryPricePeriod;
-    int? introductoryAmountPrice;
+    num? introductoryAmountPrice;
     int? introductoryPriceCycles;
     if (introductDiscount != null &&
         AWCommonUtil.strNotEmpty(introductDiscount?.discountPeriod)) {
@@ -272,7 +272,7 @@ class AWProductDiscount {
 
   ///优惠的价格
   String? discountPrice;
-  int? discountPriceAmount;
+  num? discountPriceAmount;
 
   ///优惠的价格货币代码
   String? discountPriceCurrency;
@@ -301,7 +301,7 @@ class AWProductDiscount {
         discountPaymentModel = (cycles != null && cycles > 1) ? 0 : 1;
 
   ///解析iOS的优惠到flutter
-  AWProductDiscount.fromIosParams(String? id, String? price, int? priceAmount,
+  AWProductDiscount.fromIosParams(String? id, String? price, num? priceAmount,
       String? period, int? cycles, int? discountPaymentMode)
       : discountId = id,
         discountPrice = price,

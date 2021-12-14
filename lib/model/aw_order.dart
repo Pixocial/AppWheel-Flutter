@@ -29,6 +29,7 @@ class AWOrder {
   ////订阅独有的////
   ///是否处于宽限期
   bool inGracePeriod = false;
+  ///是否处于推介周期，iOS用
   bool isInIntroPeriod = false;
 
   ///商品类型，iOS使用
@@ -64,12 +65,19 @@ class AWOrder {
     final order = AWOrder();
     order.productId = json["productIdentifier"];
     order.orderId = json["originalTransactionId"];
+    order.inAppOwnershipType = json["inAppOwnershipType"];
     order.productType =
         json["productType"] != null ? json["productType"].toString() : "";
     order.isInIntroPeriod = json["isInIntroPeriod"] ?? false;
     if (json["subscriptionExpiredTime"] != null) {
       final date = DateTime.parse(json["subscriptionExpiredTime"]);
-      order.expireTime = date.microsecondsSinceEpoch;
+      order.expireTime = date.millisecondsSinceEpoch;
+    }
+    if (json["inGracePeriod"] != null) {
+      order.inGracePeriod = json["inGracePeriod"];
+    }
+    if (json["isInIntroPeriod"] != null) {
+      order.isInIntroPeriod = json["isInIntroPeriod"];
     }
 
     return order;
@@ -86,7 +94,10 @@ class AWOrder {
         'autoRenewing: $autoRenewing, \n'
         'obfuscatedAccountId: ${obfuscatedAccountId ?? ""},\n'
         ' obfuscatedProfileId: ${obfuscatedProfileId ?? ""}, \n'
+        ' inAppOwnershipType: ${inAppOwnershipType ?? ""}, \n'
+        ' productType: ${productType ?? ""}, \n'
         'inGracePeriod: $inGracePeriod,\n '
+        'isInIntroPeriod: $isInIntroPeriod,\n '
         'expireTime: ${expireTime ?? 0}}';
   }
 
