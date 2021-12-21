@@ -110,6 +110,7 @@ class ProductListState extends State<ProductListScreen> {
     if (Platform.isAndroid) {
       var inappRes = await AWPurchase.requestProducts(
           AwPlatformType.android, "inapp", getAndroidInAppProducts());
+      requestFinish = true;
       if (inappRes?.result == false) {
         showToast(inappRes?.msg ?? "request product error");
         EasyLoading.dismiss(animation: true);

@@ -112,7 +112,7 @@ public class AppwheelFlutterPlugin implements FlutterPlugin, MethodCallHandler, 
         isCallInit = true;
         String appId = call.argument("appId");
         String appUserId = call.argument("appUserId");
-        Log.i(TAG,"调用初始化");
+        Log.i(TAG,"调用初始化"+appUserId);
         if (!isNullOrEmpty(appId)) {
             Billing.configure(context, appId, appUserId, new OnBillingClientSetupFinishedListener() {
                 @Override
